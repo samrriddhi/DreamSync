@@ -7,6 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import com.dreamsync.dto.request.LoginRequest;
 import com.dreamsync.security.JwtService;
+import com.dreamsync.dto.response.UserResponse;
+import java.util.ArrayList;
+import com.dreamsync.mapper.UserMapper;
+
 
 @Service
 public class UserService {
@@ -17,13 +21,14 @@ public class UserService {
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       UserMapper userMapper) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.userMapper = userMapper;
     }
-
     public User saveUser(User user) {
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -67,4 +72,12 @@ public class UserService {
 
         return jwtService.generateToken(user.getEmail());
     }
+    public List<UserResponse> getAllUserResponses() {
+
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::toResponse)
+                .toList();
+    }
+    private final UserMapper userMapper;
 }

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.dreamsync.dto.request.LoginRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.dreamsync.dto.response.UserResponse;
 
 
 import java.util.List;
@@ -25,12 +26,9 @@ public class UserController {
 
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
 
-        List<User> users = userService.getAllUsers();
-
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userService.getAllUserResponses());
     }
 
     @PutMapping("/{id}")

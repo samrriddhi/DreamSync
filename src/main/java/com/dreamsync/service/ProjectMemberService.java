@@ -20,14 +20,20 @@ public class ProjectMemberService {
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final ActivityLogService activityLogService;
 
     public ProjectMemberService(ProjectMemberRepository projectMemberRepository,
                                 ProjectRepository projectRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                NotificationService notificationService,
+                                ActivityLogService activityLogService) {
 
         this.projectMemberRepository = projectMemberRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
+        this.activityLogService = activityLogService;
     }
 
     public String assignMember(Long projectId,
@@ -52,6 +58,15 @@ public class ProjectMemberService {
         member.setRole(request.getRole());
 
         projectMemberRepository.save(member);
+        notificationService.createNotification(
+                user,
+                "You have been assigned to project: " + project.getName()
+        );
+        activityLogService.logActivity(
+                "MEMBER_ASSIGNED",
+                "Assigned " + user.getName() +
+                        " to project: " + project.getName()
+        );
 
         return "Member assigned successfully";
     }
