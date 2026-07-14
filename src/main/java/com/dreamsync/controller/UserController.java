@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.dreamsync.dto.request.LoginRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class UserController {
 
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
 
         List<User> users = userService.getAllUsers();
@@ -32,6 +34,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody User user) {
@@ -41,6 +44,7 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
 
         userService.deleteUser(id);
