@@ -10,7 +10,9 @@ import com.dreamsync.security.JwtService;
 import com.dreamsync.dto.response.UserResponse;
 import java.util.ArrayList;
 import com.dreamsync.mapper.UserMapper;
-
+import com.dreamsync.dto.response.JwtResponse;
+import com.dreamsync.entity.RefreshToken;
+import com.dreamsync.dto.request.RefreshTokenRequest;
 
 @Service
 public class UserService {
@@ -18,16 +20,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       UserMapper userMapper) {
+                       UserMapper userMapper,
+                       RefreshTokenService refreshTokenService) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.userMapper = userMapper;
+        this.refreshTokenService = refreshTokenService;
     }
     public User saveUser(User user) {
 
@@ -61,7 +66,7 @@ public class UserService {
 
         userRepository.delete(user);
     }
-    public String login(LoginRequest request) {
+    public JwtResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -70,7 +75,32 @@ public class UserService {
             throw new RuntimeException("Invalid password");
         }
 
-        return jwtService.generateToken(user.getEmail());
+        String accessToken = jwtService.generateToken(user.getEmail());
+
+        RefreshToken refreshToken =
+                refreshTokenService.createRefreshToken(user);
+
+        return new JwtResponse(
+                accessToken,
+                refreshToken.getToken()
+        );
+    }
+    public JwtResponse refreshToken(RefreshTokenRequest request) {
+
+        RefreshToken refreshToken =
+                refreshTokenService.findByToken(request.getRefreshToken());
+
+        if (refreshTokenService.isExpired(refreshToken)) {
+            throw new RuntimeException("Refresh token has expired");
+        }
+
+        String accessToken =
+                jwtService.generateToken(refreshToken.getUser().getEmail());
+
+        return new JwtResponse(
+                accessToken,
+                refreshToken.getToken()
+        );
     }
     public List<UserResponse> getAllUserResponses() {
 
@@ -78,6 +108,13 @@ public class UserService {
                 .stream()
                 .map(userMapper::toResponse)
                 .toList();
+    }
+    public void logout(String refreshToken) {
+
+        RefreshToken token =
+                refreshTokenService.findByToken(refreshToken);
+
+        refreshTokenService.deleteByUser(token.getUser());
     }
     private final UserMapper userMapper;
 }

@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Jwts;
 import java.util.Date;
 import io.jsonwebtoken.Claims;
+import com.dreamsync.dto.request.RefreshTokenRequest;
+import com.dreamsync.entity.RefreshToken;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -57,4 +59,5 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
     }
+
 }
