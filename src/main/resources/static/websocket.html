@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DreamSync WebSocket Test</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+</head>
+
+<body>
+
+<h2>DreamSync WebSocket Test</h2>
+
+<input type="text" id="sender" placeholder="Sender">
+<br><br>
+
+<input type="text" id="message" placeholder="Message">
+<br><br>
+
+<button id="connectBtn" onclick="connect()">Connect</button>
+
+<button onclick="sendMessage()">Send</button>
+
+<hr>
+
+<h3>Messages</h3>
+
+<div id="messages"></div>
+
+<script>
+
+    let stompClient = null;
+    let connected = false;
+
+    function connect() {
+
+        if (connected) {
+            alert("Already connected!");
+            return;
+        }
+
+        const socket = new SockJS('/ws');
+
+        stompClient = new StompJs.Client({
+            webSocketFactory: () => socket,
+
+            onConnect: () => {
+
+                connected = true;
+
+                console.log("Connected");
+
+                document.getElementById("connectBtn").disabled = true;
+
+                stompClient.subscribe('/topic/notifications', (message) => {
+
+                    const body = JSON.parse(message.body);
+
+                    document.getElementById("messages").innerHTML +=
+                        "<p><b>" + body.sender + "</b>: "
+                        + body.message + "</p>";
+
+                });
+
+            }
+        });
+
+        stompClient.activate();
+    }
+
+    function sendMessage() {
+
+        const sender = document.getElementById("sender").value;
+        const message = document.getElementById("message").value;
+
+        stompClient.publish({
+
+            destination: "/app/notify",
+
+            body: JSON.stringify({
+
+                sender: sender,
+                message: message
+
+            })
+
+        });
+
+    }
+
+</script>
+
+</body>
+</html>
