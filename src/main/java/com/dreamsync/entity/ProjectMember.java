@@ -4,7 +4,8 @@ import com.dreamsync.enums.ProjectRole;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "project_members")
+@Table(name = "project_members",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"project_id", "user_id"}))
 public class ProjectMember {
 
     @Id
