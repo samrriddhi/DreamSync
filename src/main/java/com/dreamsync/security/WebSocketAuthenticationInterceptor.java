@@ -70,8 +70,10 @@ public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
                 throw new MessageDeliveryException("Invalid token");
             }
 
+            // Use email as Principal.getName() so convertAndSendToUser targets this account.
             accessor.setUser(new UsernamePasswordAuthenticationToken(
-                    user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))));
+                    user.getEmail(), null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))));
         } catch (JwtException | IllegalArgumentException exception) {
             throw new MessageDeliveryException("Invalid or expired token");
         }
