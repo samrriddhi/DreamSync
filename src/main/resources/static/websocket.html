@@ -1,94 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>DreamSync WebSocket Test</title>
-
+    <meta charset="UTF-8">
+    <title>DreamSync Private WebSocket Test</title>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
 </head>
-
 <body>
-
-<h2>DreamSync WebSocket Test</h2>
-
-<input type="text" id="sender" placeholder="Sender">
-<br><br>
-
-<input type="text" id="message" placeholder="Message">
-<br><br>
-
+<h2>DreamSync Private WebSocket Test</h2>
+<label for="token">Access token (JWT)</label>
+<input type="password" id="token" autocomplete="off" placeholder="Paste access token">
 <button id="connectBtn" onclick="connect()">Connect</button>
-
-<button onclick="sendMessage()">Send</button>
-
+<p id="status">Not connected</p>
 <hr>
-
-<h3>Messages</h3>
-
+<h3>My notifications</h3>
 <div id="messages"></div>
 
 <script>
-
     let stompClient = null;
-    let connected = false;
 
     function connect() {
-
-        if (connected) {
-            alert("Already connected!");
+        const token = document.getElementById("token").value.trim();
+        if (!token) {
+            document.getElementById("status").textContent = "Enter an access token first.";
             return;
         }
 
-        const socket = new SockJS('/ws');
-
+        const socket = new SockJS("/ws");
         stompClient = new StompJs.Client({
             webSocketFactory: () => socket,
-
+            connectHeaders: {
+                Authorization: "Bearer " + token
+            },
             onConnect: () => {
-
-                connected = true;
-
-                console.log("Connected");
-
+                document.getElementById("status").textContent = "Connected";
                 document.getElementById("connectBtn").disabled = true;
-
-                stompClient.subscribe('/topic/notifications', (message) => {
-
-                    const body = JSON.parse(message.body);
-
-                    document.getElementById("messages").innerHTML +=
-                        "<p><b>" + body.sender + "</b>: "
-                        + body.message + "</p>";
-
+                stompClient.subscribe("/user/queue/notifications", (frame) => {
+                    const notification = JSON.parse(frame.body);
+                    const item = document.createElement("p");
+                    item.textContent = notification.sender + ": " + notification.message;
+                    document.getElementById("messages").appendChild(item);
                 });
-
+            },
+            onStompError: () => {
+                document.getElementById("status").textContent = "Connection error. Check your token.";
+            },
+            onWebSocketClose: () => {
+                document.getElementById("status").textContent = "Disconnected";
+                document.getElementById("connectBtn").disabled = false;
             }
         });
-
         stompClient.activate();
     }
-
-    function sendMessage() {
-
-        const sender = document.getElementById("sender").value;
-        const message = document.getElementById("message").value;
-
-        stompClient.publish({
-
-            destination: "/app/notify",
-
-            body: JSON.stringify({
-
-                sender: sender,
-                message: message
-
-            })
-
-        });
-
-    }
-
 </script>
-
 </body>
 </html>
