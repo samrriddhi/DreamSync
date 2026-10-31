@@ -1,0 +1,65 @@
+package com.dreamsync.security;
+
+import com.dreamsync.entity.User;
+import com.dreamsync.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
+
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
+
+    public WebSocketAuthenticationInterceptor(JwtService jwtService, UserRepository userRepository) {
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        StompCommand command = accessor.getCommand();
+
+        if (command == StompCommand.CONNECT) {
+            authenticate(accessor);
+        } else if (command == StompCommand.SEND || command == StompCommand.SUBSCRIBE) {
+            if (accessor.getUser() == null) {
+                throw new MessageDeliveryException("Authentication required");
+            }
+        }
+        return message;
+    }
+
+    private void authenticate(StompHeaderAccessor accessor) {
+        List<String> headers = accessor.getNativeHeader("Authorization");
+        if (headers == null || headers.isEmpty() || !headers.get(0).startsWith("Bearer ")) {
+            throw new MessageDeliveryException("Bearer token required");
+        }
+
+        try {
+            String email = jwtService.extractEmail(headers.get(0).substring(7));
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new MessageDeliveryException("Invalid token"));
+
+            if (!jwtService.isTokenValid(headers.get(0).substring(7), user.getEmail())) {
+                throw new MessageDeliveryException("Invalid token");
+            }
+
+            accessor.setUser(new UsernamePasswordAuthenticationToken(
+                    user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))));
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw new MessageDeliveryException("Invalid or expired token", exception);
+        }
+    }
+}
