@@ -48,7 +48,7 @@ public class TaskService {
         Task savedTask = taskRepository.save(task);
 
         webSocketNotificationService.sendNotification(
-                currentUser.getName(), "created task: " + savedTask.getTitle());
+                currentUser.getEmail(), currentUser.getName(), "created task: " + savedTask.getTitle());
         return savedTask;
     }
 
@@ -74,7 +74,7 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(existingTask);
         webSocketNotificationService.sendNotification(
-                currentUser.getName(), "updated task: " + savedTask.getTitle());
+                currentUser.getEmail(), currentUser.getName(), "updated task: " + savedTask.getTitle());
         return savedTask;
     }
 
@@ -86,7 +86,7 @@ public class TaskService {
         String taskTitle = task.getTitle();
         taskRepository.delete(task);
         webSocketNotificationService.sendNotification(
-                currentUser.getName(), "deleted task: " + taskTitle);
+                currentUser.getEmail(), currentUser.getName(), "deleted task: " + taskTitle);
     }
 
     private Project findProject(Long projectId) {
