@@ -68,6 +68,10 @@ class TaskServiceTest {
         task.setProject(project);
         when(projectRepository.findById(5L)).thenReturn(Optional.of(project));
         when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(true);
+        ProjectMember member = new ProjectMember();
+        member.setProject(project);
+        member.setUser(currentUser);
+        when(projectMemberRepository.findByProject(project)).thenReturn(List.of(member));
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Task created = taskService.createTask(task);
