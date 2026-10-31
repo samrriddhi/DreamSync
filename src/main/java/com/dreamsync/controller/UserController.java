@@ -1,15 +1,12 @@
 package com.dreamsync.controller;
 
+import com.dreamsync.dto.response.UserResponse;
 import com.dreamsync.entity.User;
 import com.dreamsync.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.dreamsync.dto.request.LoginRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
-import com.dreamsync.dto.response.UserResponse;
-
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,31 +20,23 @@ public class UserController {
         this.userService = userService;
     }
 
-
-
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
-
         return ResponseEntity.ok(userService.getAllUserResponses());
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> updateUser(
+    public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody User user) {
-
-        User updatedUser = userService.updateUser(id, user);
-
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(userService.updateUser(id, user));
     }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-
         userService.deleteUser(id);
-
         return ResponseEntity.ok("User deleted successfully");
     }
-    
 }
