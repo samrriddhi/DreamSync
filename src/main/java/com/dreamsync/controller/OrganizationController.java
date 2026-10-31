@@ -1,6 +1,9 @@
 package com.dreamsync.controller;
 
+import com.dreamsync.dto.request.AddOrganizationMemberRequest;
+import com.dreamsync.dto.request.CreateOrganizationRequest;
 import com.dreamsync.entity.Organization;
+import com.dreamsync.dto.response.OrganizationResponse;
 import com.dreamsync.service.OrganizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,33 +27,40 @@ public class OrganizationController {
 
     @Operation(summary = "Create a new organization")
     @PostMapping
-    public ResponseEntity<Organization> createOrganization(
-            @Valid @RequestBody Organization organization) {
-
-        Organization savedOrganization =
-                organizationService.saveOrganization(organization);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(savedOrganization);
+    public ResponseEntity<OrganizationResponse> createOrganization(
+            @Valid @RequestBody CreateOrganizationRequest request) {
+        Organization savedOrganization = organizationService.saveOrganization(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(savedOrganization));
     }
 
-    @Operation(summary = "Get all organizations")
+    @Operation(summary = "Get organizations the current user belongs to")
     @GetMapping
-    public ResponseEntity<List<Organization>> getAllOrganizations() {
-
-        return ResponseEntity.ok(
-                organizationService.getAllOrganizations()
-        );
+    public ResponseEntity<List<OrganizationResponse>> getAllOrganizations() {
+        return ResponseEntity.ok(organizationService.getAllOrganizations().stream()
+                .map(this::toResponse)
+                .toList());
     }
 
     @Operation(summary = "Get organization by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Organization> getOrganizationById(
-            @PathVariable Long id) {
+    public ResponseEntity<OrganizationResponse> getOrganizationById(@PathVariable Long id) {
+        return ResponseEntity.ok(toResponse(organizationService.getOrganizationById(id)));
+    }
 
-        Organization organization =
-                organizationService.getOrganizationById(id);
-
-        return ResponseEntity.ok(organization);
+    @Operation(summary = "Add a member to an organization")
+    @PostMapping("/{organizationId}/members")
+    public ResponseEntity<String> addMember(
+            @PathVariable Long organizationId,
+            @Valid @RequestBody AddOrganizationMemberRequest request) {
+        return ResponseEntity.ok(
+                organizationService.addMember(organizationId, request.getUserId()));
+    }
+    private OrganizationResponse toResponse(Organization organization) {
+        return new OrganizationResponse(
+                organization.getId(),
+                organization.getName(),
+                organization.getDescription(),
+                organization.getCreatedAt()
+        );
     }
 }

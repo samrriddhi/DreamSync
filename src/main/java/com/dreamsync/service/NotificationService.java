@@ -7,6 +7,7 @@ import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.NotificationRepository;
 import com.dreamsync.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -68,8 +69,12 @@ public class NotificationService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Notification not found"));
 
-        notification.setRead(true);
+        User currentUser = currentUserService.getCurrentUser();
+        if (!notification.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can only update your own notifications");
+        }
 
+        notification.setRead(true);
         notificationRepository.save(notification);
     }
 

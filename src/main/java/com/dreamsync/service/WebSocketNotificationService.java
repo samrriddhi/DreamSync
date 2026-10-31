@@ -9,20 +9,15 @@ public class WebSocketNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public WebSocketNotificationService(
-            SimpMessagingTemplate messagingTemplate) {
-
+    public WebSocketNotificationService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void sendNotification(String sender,
-                                 String message) {
-
-        NotificationMessage notification =
-                new NotificationMessage(sender, message);
-
-        messagingTemplate.convertAndSend(
-                "/topic/notifications",
+    public void sendNotification(String recipientEmail, String sender, String message) {
+        NotificationMessage notification = new NotificationMessage(sender, message);
+        messagingTemplate.convertAndSendToUser(
+                recipientEmail,
+                "/queue/notifications",
                 notification
         );
     }

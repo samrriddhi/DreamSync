@@ -4,6 +4,7 @@ import com.dreamsync.dto.response.AttachmentResponse;
 import com.dreamsync.service.AttachmentService;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +52,10 @@ public class AttachmentController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + resource.getFilename() + "\"")
+                        ContentDisposition.attachment()
+                                .filename(resource.getFilename())
+                                .build()
+                                .toString())
                 .body(resource);
     }
 
