@@ -7,6 +7,9 @@ import com.dreamsync.enums.Priority;
 import com.dreamsync.enums.TaskStatus;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.ProjectRepository;
+import com.dreamsync.repository.ProjectMemberRepository;
+import com.dreamsync.service.CurrentUserService;
+import org.springframework.security.access.AccessDeniedException;
 import com.dreamsync.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +20,17 @@ public class DashboardService {
 
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
+    private final ProjectMemberRepository projectMemberRepository;
+    private final CurrentUserService currentUserService;
 
     public DashboardService(ProjectRepository projectRepository,
-                            TaskRepository taskRepository) {
-
+                            TaskRepository taskRepository,
+                            ProjectMemberRepository projectMemberRepository,
+                            CurrentUserService currentUserService) {
         this.projectRepository = projectRepository;
         this.taskRepository = taskRepository;
+        this.projectMemberRepository = projectMemberRepository;
+        this.currentUserService = currentUserService;
     }
 
     public DashboardResponse getProjectDashboard(Long projectId) {
@@ -30,6 +38,11 @@ public class DashboardService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Project not found"));
+
+        if (!projectMemberRepository.existsByProjectAndUser(
+                project, currentUserService.getCurrentUser())) {
+            throw new AccessDeniedException("You are not a member of this project's team");
+        }
 
         List<Task> tasks = taskRepository.findByProjectId(projectId);
 
