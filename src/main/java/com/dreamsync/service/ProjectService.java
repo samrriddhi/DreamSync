@@ -7,6 +7,7 @@ import com.dreamsync.entity.User;
 import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.OrganizationRepository;
+import com.dreamsync.repository.OrganizationMemberRepository;
 import com.dreamsync.repository.ProjectMemberRepository;
 import com.dreamsync.repository.ProjectRepository;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,15 +22,18 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final OrganizationRepository organizationRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final OrganizationMemberRepository organizationMemberRepository;
     private final CurrentUserService currentUserService;
 
     public ProjectService(ProjectRepository projectRepository,
                           OrganizationRepository organizationRepository,
                           ProjectMemberRepository projectMemberRepository,
+                          OrganizationMemberRepository organizationMemberRepository,
                           CurrentUserService currentUserService) {
         this.projectRepository = projectRepository;
         this.organizationRepository = organizationRepository;
         this.projectMemberRepository = projectMemberRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -48,13 +52,19 @@ public class ProjectService {
         Organization organization = organizationRepository.findById(project.getOrganization().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
 
+        User creator = currentUserService.getCurrentUser();
+        if (!organizationMemberRepository.existsByOrganizationAndUser(organization, creator)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You must be an organization member to create a project");
+        }
+
         project.setId(null);
         project.setOrganization(organization);
         Project savedProject = projectRepository.save(project);
 
         ProjectMember creatorMembership = new ProjectMember();
         creatorMembership.setProject(savedProject);
-        creatorMembership.setUser(currentUserService.getCurrentUser());
+        creatorMembership.setUser(creator);
         creatorMembership.setRole(ProjectRole.PROJECT_MANAGER);
         projectMemberRepository.save(creatorMembership);
 
