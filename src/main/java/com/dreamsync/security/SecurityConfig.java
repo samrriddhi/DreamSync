@@ -36,7 +36,7 @@ public class SecurityConfig {
                                 "/static/websocket.html",
                                 "/ws/**"
                         ).permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
