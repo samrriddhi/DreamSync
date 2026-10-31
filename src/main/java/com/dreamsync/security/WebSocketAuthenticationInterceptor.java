@@ -71,7 +71,7 @@ public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
             accessor.setUser(new UsernamePasswordAuthenticationToken(
                     user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))));
         } catch (JwtException | IllegalArgumentException exception) {
-            throw new MessageDeliveryException("Invalid or expired token", exception);
+            throw new MessageDeliveryException("Invalid or expired token");
         }
     }
 }
