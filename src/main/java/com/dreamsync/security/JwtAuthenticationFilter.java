@@ -2,6 +2,7 @@ package com.dreamsync.security;
 
 import com.dreamsync.entity.User;
 import com.dreamsync.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +24,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(JwtService jwtService,
                                    UserRepository userRepository) {
-
         this.jwtService = jwtService;
         this.userRepository = userRepository;
     }
@@ -43,20 +43,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        System.out.println("TOKEN: " + token);
+        try {
+            String email = jwtService.extractEmail(token);
+            User user = userRepository.findByEmail(email).orElse(null);
 
-        String email = jwtService.extractEmail(token);
-        System.out.println("EMAIL: " + email);
-
-        User user = userRepository.findByEmail(email).orElse(null);
-        System.out.println("USER FOUND: " + user);
-
-        if (user != null) {
-            System.out.println("TOKEN VALID: " + jwtService.isTokenValid(token, user.getEmail()));
-        }
-
-        if (user != null &&
-                jwtService.isTokenValid(token, user.getEmail())) {
+            if (user == null || !jwtService.isTokenValid(token, user.getEmail())) {
+                SecurityContextHolder.clearContext();
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired bearer token");
+                return;
+            }
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
@@ -66,6 +61,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        } catch (JwtException | IllegalArgumentException ex) {
+            SecurityContextHolder.clearContext();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired bearer token");
+            return;
         }
 
         filterChain.doFilter(request, response);
