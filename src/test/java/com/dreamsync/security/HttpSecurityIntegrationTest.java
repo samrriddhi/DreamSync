@@ -3,6 +3,7 @@ package com.dreamsync.security;
 import com.dreamsync.controller.UserController;
 import com.dreamsync.dto.response.UserResponse;
 import com.dreamsync.service.UserService;
+import com.dreamsync.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -27,7 +28,10 @@ class HttpSecurityIntegrationTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private JwtService jwtService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @MockBean
     private UserService userService;
