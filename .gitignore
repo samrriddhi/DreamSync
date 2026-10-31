@@ -36,3 +36,7 @@ build/
 .env
 .env.*
 !.env.example
+
+# JVM crash dumps
+hs_err_pid*.log
+*.hprof
