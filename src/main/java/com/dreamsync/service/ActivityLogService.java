@@ -3,6 +3,8 @@ package com.dreamsync.service;
 import com.dreamsync.dto.response.ActivityLogResponse;
 import com.dreamsync.entity.ActivityLog;
 import com.dreamsync.entity.User;
+import com.dreamsync.enums.Role;
+import org.springframework.security.access.AccessDeniedException;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.ActivityLogRepository;
 import com.dreamsync.repository.UserRepository;
@@ -45,6 +47,10 @@ public class ActivityLogService {
     }
 
     public List<ActivityLogResponse> getAllActivities() {
+        User currentUser = currentUserService.getCurrentUser();
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("Only administrators can view all activity logs");
+        }
 
         List<ActivityLog> logs =
                 activityLogRepository.findAllByOrderByCreatedAtDesc();
