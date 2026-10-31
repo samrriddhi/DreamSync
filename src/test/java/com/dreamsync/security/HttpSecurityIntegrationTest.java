@@ -1,0 +1,62 @@
+package com.dreamsync.security;
+
+import com.dreamsync.controller.UserController;
+import com.dreamsync.dto.response.UserResponse;
+import com.dreamsync.service.UserService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(UserController.class)
+@Import(SecurityConfig.class)
+class HttpSecurityIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockBean
+    private UserService userService;
+
+    @Test
+    void unauthenticatedRequestReceivesUnauthorized() throws Exception {
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void authenticatedNonAdminCannotAccessAdminEndpoint() throws Exception {
+        mockMvc.perform(get("/users").with(user("developer").roles("DEVELOPER")))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void adminCanAccessAdminEndpoint() throws Exception {
+        when(userService.getAllUserResponses()).thenReturn(List.of());
+
+        mockMvc.perform(get("/users")
+                        .with(user("admin").roles("ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(userService).getAllUserResponses();
+    }
+}
