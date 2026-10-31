@@ -55,9 +55,28 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken rotateRefreshToken(RefreshToken refreshToken) {
-        refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
-        return refreshTokenRepository.save(refreshToken);
+        LocalDateTime now = LocalDateTime.now();
+        String currentToken = refreshToken.getToken();
+        String newToken = UUID.randomUUID().toString();
+        LocalDateTime newExpiry = now.plusDays(7);
+
+        int updated = refreshTokenRepository.rotateIfCurrent(
+                refreshToken.getId(),
+                currentToken,
+                now,
+                newToken,
+                newExpiry
+        );
+
+        if (updated != 1) {
+            throw new ResourceNotFoundException(
+                    "Refresh token is invalid, expired, or has already been used"
+            );
+        }
+
+        refreshToken.setToken(newToken);
+        refreshToken.setExpiryDate(newExpiry);
+        return refreshToken;
     }
     public void deleteByUser(User user) {
         refreshTokenRepository.deleteByUser(user);
