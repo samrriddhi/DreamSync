@@ -20,16 +20,40 @@ class RefreshTokenServiceTest {
 
     @Test void rotatingTokenReplacesValueAndRenewsExpiry() {
         RefreshToken token = new RefreshToken();
+        token.setId(1L);
         token.setToken("old-token");
         token.setExpiryDate(LocalDateTime.now().plusDays(1));
         token.setUser(new User());
-        when(repository.save(token)).thenReturn(token);
+        when(repository.rotateIfCurrent(
+                eq(1L), eq("old-token"), any(LocalDateTime.class),
+                anyString(), any(LocalDateTime.class)
+        )).thenReturn(1);
 
         RefreshToken rotated = service.rotateRefreshToken(token);
 
         assertNotEquals("old-token", rotated.getToken());
         assertTrue(rotated.getExpiryDate().isAfter(LocalDateTime.now().plusDays(6)));
-        verify(repository).save(token);
+        verify(repository).rotateIfCurrent(
+                eq(1L), eq("old-token"), any(LocalDateTime.class),
+                eq(rotated.getToken()), eq(rotated.getExpiryDate())
+        );
+    }
+
+    @Test void concurrentOrReplayedRotationIsRejected() {
+        RefreshToken token = new RefreshToken();
+        token.setId(1L);
+        token.setToken("already-used-token");
+        token.setExpiryDate(LocalDateTime.now().plusDays(1));
+
+        when(repository.rotateIfCurrent(
+                eq(1L), eq("already-used-token"), any(LocalDateTime.class),
+                anyString(), any(LocalDateTime.class)
+        )).thenReturn(0);
+
+        assertThrows(
+                com.dreamsync.exception.ResourceNotFoundException.class,
+                () -> service.rotateRefreshToken(token)
+        );
     }
 
     @Test void expiredTokenIsRejectedAtExpiryBoundary() {
