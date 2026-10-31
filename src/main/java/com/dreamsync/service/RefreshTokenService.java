@@ -50,9 +50,14 @@ public class RefreshTokenService {
                         new ResourceNotFoundException("Refresh token not found"));
     }
     public boolean isExpired(RefreshToken refreshToken) {
+        return !refreshToken.getExpiryDate().isAfter(LocalDateTime.now());
+    }
 
-        return refreshToken.getExpiryDate()
-                .isBefore(LocalDateTime.now());
+    @Transactional
+    public RefreshToken rotateRefreshToken(RefreshToken refreshToken) {
+        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
+        return refreshTokenRepository.save(refreshToken);
     }
     public void deleteByUser(User user) {
         refreshTokenRepository.deleteByUser(user);
