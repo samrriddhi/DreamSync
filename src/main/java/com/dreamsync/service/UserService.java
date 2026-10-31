@@ -3,6 +3,7 @@ package com.dreamsync.service;
 import com.dreamsync.dto.request.LoginRequest;
 import com.dreamsync.dto.request.RefreshTokenRequest;
 import com.dreamsync.dto.request.RegisterRequest;
+import com.dreamsync.dto.request.UpdateUserRequest;
 import com.dreamsync.dto.response.JwtResponse;
 import com.dreamsync.dto.response.UserResponse;
 import com.dreamsync.entity.RefreshToken;
@@ -53,7 +54,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public UserResponse updateUser(Long id, User updatedUser) {
+    public UserResponse updateUser(Long id, UpdateUserRequest updatedUser) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
