@@ -38,12 +38,12 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<JwtResponse> refreshToken(
-            @RequestBody RefreshTokenRequest request) {
+            @Valid @RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(userService.refreshToken(request));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody LogoutRequest request) {
+    public ResponseEntity<String> logout(@Valid @RequestBody LogoutRequest request) {
         userService.logout(request.getRefreshToken());
         return ResponseEntity.ok("Logged out successfully");
     }
