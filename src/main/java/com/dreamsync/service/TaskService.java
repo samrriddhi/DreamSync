@@ -47,8 +47,7 @@ public class TaskService {
         task.setProject(project);
         Task savedTask = taskRepository.save(task);
 
-        webSocketNotificationService.sendNotification(
-                currentUser.getEmail(), currentUser.getName(), "created task: " + savedTask.getTitle());
+        notifyProjectMembers(project, currentUser, "created task: " + savedTask.getTitle());
         return savedTask;
     }
 
@@ -73,8 +72,8 @@ public class TaskService {
         existingTask.setEstimatedHours(updatedTask.getEstimatedHours());
 
         Task savedTask = taskRepository.save(existingTask);
-        webSocketNotificationService.sendNotification(
-                currentUser.getEmail(), currentUser.getName(), "updated task: " + savedTask.getTitle());
+        notifyProjectMembers(existingTask.getProject(), currentUser,
+                "updated task: " + savedTask.getTitle());
         return savedTask;
     }
 
@@ -85,8 +84,13 @@ public class TaskService {
 
         String taskTitle = task.getTitle();
         taskRepository.delete(task);
-        webSocketNotificationService.sendNotification(
-                currentUser.getEmail(), currentUser.getName(), "deleted task: " + taskTitle);
+        notifyProjectMembers(task.getProject(), currentUser, "deleted task: " + taskTitle);
+    }
+
+    private void notifyProjectMembers(Project project, User sender, String message) {
+        projectMemberRepository.findByProject(project).forEach(member ->
+                webSocketNotificationService.sendNotification(
+                        member.getUser().getEmail(), sender.getName(), message));
     }
 
     private Project findProject(Long projectId) {
