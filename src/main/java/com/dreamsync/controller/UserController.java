@@ -1,7 +1,7 @@
 package com.dreamsync.controller;
 
 import com.dreamsync.dto.response.UserResponse;
-import com.dreamsync.entity.User;
+import com.dreamsync.dto.request.UpdateUserRequest;
 import com.dreamsync.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +30,8 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(id, user));
+            @Valid @RequestBody UpdateUserRequest request) {
+        return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
     @DeleteMapping("/{id}")
