@@ -42,6 +42,7 @@ class TaskServiceTest {
         currentUser = new User();
         currentUser.setId(10L);
         currentUser.setName("Member");
+        currentUser.setEmail("member@example.com");
         project = new Project();
         project.setId(5L);
         project.setName("Project");
@@ -74,7 +75,7 @@ class TaskServiceTest {
         assertNull(created.getId());
         assertSame(project, created.getProject());
         verify(taskRepository).save(task);
-        verify(notificationService).sendNotification("Member", "created task: New task");
+        verify(notificationService).sendNotification("member@example.com", "Member", "created task: New task");
     }
 
     @Test
