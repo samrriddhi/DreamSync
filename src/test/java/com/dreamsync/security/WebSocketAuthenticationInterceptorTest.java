@@ -11,7 +11,9 @@ import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,10 +36,8 @@ class WebSocketAuthenticationInterceptorTest {
 
     @Test
     void connectWithoutBearerTokenIsRejected() {
-        Message<?> message = stompMessage(StompCommand.CONNECT, null, null);
-
-        assertThrows(MessageDeliveryException.class,
-                () -> interceptor.preSend(message, channel));
+        Message<?> message = stompMessage(StompCommand.CONNECT, null, null, false);
+        assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, channel));
     }
 
     @Test
@@ -50,29 +50,52 @@ class WebSocketAuthenticationInterceptorTest {
         when(jwtService.isTokenValid("valid-token", "developer@example.com")).thenReturn(true);
         when(userRepository.findByEmail("developer@example.com")).thenReturn(Optional.of(user));
 
-        Message<?> message = stompMessage(StompCommand.CONNECT, "Bearer valid-token", null);
-
-        Message<?> result = interceptor.preSend(message, channel);
-
-        assertNotNull(result);
+        Message<?> message = stompMessage(StompCommand.CONNECT, "Bearer valid-token", null, false);
+        assertNotNull(interceptor.preSend(message, channel));
         verify(userRepository).findByEmail("developer@example.com");
     }
 
     @Test
     void unauthenticatedSendIsRejected() {
-        Message<?> message = stompMessage(StompCommand.SEND, null, "/app/notify");
-
-        assertThrows(MessageDeliveryException.class,
-                () -> interceptor.preSend(message, channel));
+        Message<?> message = stompMessage(StompCommand.SEND, null, "/app/notify", false);
+        assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, channel));
     }
 
-    private Message<?> stompMessage(StompCommand command, String authorization, String destination) {
+    @Test
+    void authenticatedClientCannotSendBroadcastMessages() {
+        Message<?> message = stompMessage(StompCommand.SEND, null, "/app/notify", true);
+        assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void authenticatedUserCanSubscribeToPrivateNotificationQueue() {
+        Message<?> message = stompMessage(
+                StompCommand.SUBSCRIBE, null, "/user/queue/notifications", true);
+        assertNotNull(interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void authenticatedUserCannotSubscribeToSharedNotificationTopic() {
+        Message<?> message = stompMessage(
+                StompCommand.SUBSCRIBE, null, "/topic/notifications", true);
+        assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, channel));
+    }
+
+    private Message<?> stompMessage(
+            StompCommand command, String authorization, String destination, boolean authenticated) {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(command);
         if (authorization != null) {
             accessor.setNativeHeader("Authorization", authorization);
         }
         if (destination != null) {
             accessor.setDestination(destination);
+        }
+        if (authenticated) {
+            User user = new User();
+            user.setEmail("developer@example.com");
+            user.setRole(Role.DEVELOPER);
+            accessor.setUser(new UsernamePasswordAuthenticationToken(
+                    user, null, List.of()));
         }
         return MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
     }
