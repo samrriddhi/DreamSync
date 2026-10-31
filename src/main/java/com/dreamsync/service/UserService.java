@@ -13,6 +13,7 @@ import com.dreamsync.mapper.UserMapper;
 import com.dreamsync.repository.UserRepository;
 import com.dreamsync.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -76,10 +77,10 @@ public class UserService {
 
     public JwtResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new BadCredentialsException("Invalid email or password");
         }
 
         String accessToken = jwtService.generateToken(user.getEmail());
