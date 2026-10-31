@@ -98,7 +98,10 @@ public class UserService {
         String accessToken =
                 jwtService.generateToken(refreshToken.getUser().getEmail());
 
-        return new JwtResponse(accessToken, refreshToken.getToken());
+        RefreshToken rotatedToken =
+                refreshTokenService.rotateRefreshToken(refreshToken);
+
+        return new JwtResponse(accessToken, rotatedToken.getToken());
     }
 
     public List<UserResponse> getAllUserResponses() {
