@@ -33,12 +33,24 @@ public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
 
         if (command == StompCommand.CONNECT) {
             authenticate(accessor);
-        } else if (command == StompCommand.SEND || command == StompCommand.SUBSCRIBE) {
-            if (accessor.getUser() == null) {
-                throw new MessageDeliveryException("Authentication required");
+        } else if (command == StompCommand.SEND) {
+            requireAuthenticated(accessor);
+            if (!"/app/notify".equals(accessor.getDestination())) {
+                throw new MessageDeliveryException("Destination is not allowed");
+            }
+        } else if (command == StompCommand.SUBSCRIBE) {
+            requireAuthenticated(accessor);
+            if (!"/topic/notifications".equals(accessor.getDestination())) {
+                throw new MessageDeliveryException("Destination is not allowed");
             }
         }
         return message;
+    }
+
+    private void requireAuthenticated(StompHeaderAccessor accessor) {
+        if (accessor.getUser() == null) {
+            throw new MessageDeliveryException("Authentication required");
+        }
     }
 
     private void authenticate(StompHeaderAccessor accessor) {
