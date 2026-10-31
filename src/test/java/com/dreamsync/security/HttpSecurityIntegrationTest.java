@@ -18,6 +18,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
@@ -62,5 +64,26 @@ class HttpSecurityIntegrationTest {
                 .andExpect(status().isOk());
 
         verify(userService).getAllUserResponses();
+    }
+
+    @Test
+    void allowsPreflightFromConfiguredFrontendOrigin() throws Exception {
+        mockMvc.perform(options("/users")
+                        .header("Origin", "http://localhost:5173")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        "Access-Control-Allow-Origin", "http://localhost:5173"));
+    }
+
+    @Test
+    void rejectsPreflightFromUnconfiguredOrigin() throws Exception {
+        mockMvc.perform(options("/users")
+                        .header("Origin", "https://untrusted.example")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Authorization"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 }
