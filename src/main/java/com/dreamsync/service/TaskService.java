@@ -4,6 +4,9 @@ import com.dreamsync.entity.Project;
 import com.dreamsync.entity.ProjectMember;
 import com.dreamsync.entity.Task;
 import com.dreamsync.entity.User;
+import com.dreamsync.dto.response.TaskResponse;
+import com.dreamsync.mapper.TaskResponseMapper;
+import org.springframework.transaction.annotation.Transactional;
 import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.ProjectMemberRepository;
@@ -30,6 +33,21 @@ public class TaskService {
         this.projectMemberRepository = projectMemberRepository;
         this.webSocketNotificationService = webSocketNotificationService;
         this.currentUserService = currentUserService;
+    }
+
+    @Transactional
+    public TaskResponse createTaskResponse(Task task) {
+        return new TaskResponseMapper().toResponse(createTask(task));
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getAllTaskResponses() {
+        return new TaskResponseMapper().toResponseList(getAllTasks());
+    }
+
+    @Transactional
+    public TaskResponse updateTaskResponse(Long id, Task task) {
+        return new TaskResponseMapper().toResponse(updateTask(id, task));
     }
 
     public Task createTask(Task task) {
