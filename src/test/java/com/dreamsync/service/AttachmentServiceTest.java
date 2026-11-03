@@ -52,7 +52,7 @@ class AttachmentServiceTest {
 
     @Test void nonMemberCannotListAttachments() {
         when(tasks.findById(7L)).thenReturn(Optional.of(task));
-        when(members.existsByProjectAndUser(project, current)).thenReturn(false);
+        when(members.findByProjectAndUser(project, current)).thenReturn(Optional.empty());
         assertThrows(AccessDeniedException.class, () -> service.getAttachments(7L));
         verify(attachments, never()).findByTask(any());
     }
@@ -83,7 +83,7 @@ class AttachmentServiceTest {
 
     @Test void uploadLargerThanTenMegabytesIsRejected() {
         when(tasks.findById(7L)).thenReturn(Optional.of(task));
-        when(members.existsByProjectAndUser(project, current)).thenReturn(true);
+        when(members.findByProjectAndUser(project, current)).thenReturn(Optional.of(membership(ProjectRole.DEVELOPER)));
         MockMultipartFile file = mock(MockMultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(file.getSize()).thenReturn(10L * 1024 * 1024 + 1);
