@@ -40,3 +40,10 @@ build/
 # JVM crash dumps
 hs_err_pid*.log
 *.hprof
+
+# Frontend dependencies and build cache
+node_modules/
+tsconfig.tsbuildinfo
+
+# Vite build output
+frontend/dist/
