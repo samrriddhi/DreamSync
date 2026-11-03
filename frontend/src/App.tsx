@@ -4,16 +4,7 @@ import { ApiProject, ApiTask, createTask as createTaskApi, getProjects, getTasks
 import { Activity, AlignLeft, Bell, CalendarDays, Check, ChevronDown, CircleHelp, Command, Filter, Flag, FolderKanban, LayoutDashboard, ListTodo, MessageSquare, MoreHorizontal, Plus, Search, Settings, SlidersHorizontal, Sparkles, Users, X, Zap } from 'lucide-react'
 
 type Task = { id: number; title: string; description: string; priority: 'High'|'Medium'|'Low'; assignee: string; initials: string; color: string; date: string; tag: string; column: string; status: string; projectId: number }
-const initialTasks: Task[] = [
- {id:1,title:'Map project dependencies',description:'Identify blockers and connect related work across teams.',priority:'High',assignee:'Aarav Mehta',initials:'AM',color:'violet',date:'Nov 05',tag:'Planning',column:'backlog'},
- {id:2,title:'Design workspace overview',description:'Create a clear hierarchy for company, teams and modules.',priority:'Medium',assignee:'Maya Kapoor',initials:'MK',color:'peach',date:'Nov 06',tag:'Product design',column:'backlog'},
- {id:3,title:'Set up authentication flow',description:'Wire login, refresh token rotation and protected routes.',priority:'High',assignee:'Sam Lee',initials:'SL',color:'blue',date:'Nov 04',tag:'Backend',column:'progress'},
- {id:4,title:'Build project sidebar',description:'Add workspace switcher and primary navigation.',priority:'Low',assignee:'Maya Kapoor',initials:'MK',color:'peach',date:'Nov 07',tag:'Frontend',column:'progress'},
- {id:5,title:'Create task activity feed',description:'Show updates, comments and ownership changes.',priority:'Medium',assignee:'Aarav Mehta',initials:'AM',color:'violet',date:'Nov 08',tag:'Product',column:'progress'},
- {id:6,title:'Define API response patterns',description:'Standardize error handling and response DTOs.',priority:'Low',assignee:'Sam Lee',initials:'SL',color:'blue',date:'Nov 03',tag:'Backend',column:'review'},
- {id:7,title:'Document team permissions',description:'Clarify manager and developer access rules.',priority:'Medium',assignee:'Nina Patel',initials:'NP',color:'green',date:'Nov 03',tag:'Security',column:'done'},
- {id:8,title:'Create database schema',description:'Model organizations, projects, tasks and dependencies.',priority:'Low',assignee:'Aarav Mehta',initials:'AM',color:'violet',date:'Nov 02',tag:'Backend',column:'done'},
-]
+
 const columns = [{id:'backlog',name:'Backlog',tone:'slate'},{id:'progress',name:'In progress',tone:'blue'},{id:'review',name:'In review',tone:'amber'},{id:'done',name:'Done',tone:'green'}]
 const nav = [{label:'Workspace',items:[['Overview',LayoutDashboard],['My tasks',ListTodo],['Projects',FolderKanban],['Calendar',CalendarDays]]},{label:'Manage',items:[['Team',Users],['Activity',Activity],['Messages',MessageSquare]]}]
 function Avatar({initials,color}:{initials:string;color:string}) { return <span className={'avatar '+color}>{initials}</span> }
@@ -36,7 +27,7 @@ function App() {
  const filtered = useMemo(()=>tasks.filter(t=>(t.title+' '+t.description+' '+t.assignee+' '+t.tag).toLowerCase().includes(query.toLowerCase()) && (filter==='All tasks'||t.priority===filter)),[tasks,query,filter])
  const total=tasks.length, completed=tasks.filter(t=>t.column==='done').length
  function addTask(e:React.FormEvent){e.preventDefault();if(!newTitle.trim())return;if(!activeProjectId){setDataError('Create or join a project before adding tasks.');return}createTaskApi({title:newTitle.trim(),description:'',status:'TODO',priority:newPriority.toUpperCase(),project:{id:activeProjectId}}).then(t=>setTasks(old=>[mapApiTask(t),...old])).catch(()=>setDataError('Could not create task. Check your project permissions.'));setNewTitle('');setShowModal(false)}
- function moveTask(id:number,column:string){const task=tasks.find(t=>t.id===id);if(!task)return;const status=column==='done'?'COMPLETED':column==='review'?'IN_REVIEW':column==='progress'?'IN_PROGRESS':'TODO';updateTaskApi(id,{title:task.title,description:task.description,status,priority:task.priority.toUpperCase(),project:{id:task.projectId}}).then(updated=>setTasks(old=>old.map(t=>t.id===id?mapApiTask(updated):t))).catch(()=>setDataError('Could not move this task. You may only edit tasks you created or manage as project manager.'))}
+ function moveTask(id:number,column:string){const task=tasks.find(t=>t.id===id);if(!task)return;const status=column==='done'?'COMPLETED':column==='review'?'IN_REVIEW':column==='progress'?'IN_PROGRESS':'TODO';updateTaskApi(id,{title:task.title,description:task.description,status,priority:task.priority.toUpperCase(),project:{id:task.projectId||activeProjectId||0}}).then(updated=>setTasks(old=>old.map(t=>t.id===id?mapApiTask(updated):t))).catch(()=>setDataError('Could not move this task. You may only edit tasks you created or manage as project manager.'))}
  if(!authenticated)return <Login onLogin={()=>{setDataError('');setAuthenticated(true)}}/>
  if(loadingData)return <div className="loading-screen">Loading your DreamSync workspace...</div>
  return <div className="app-shell">
