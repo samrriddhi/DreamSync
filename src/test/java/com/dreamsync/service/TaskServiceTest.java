@@ -4,6 +4,7 @@ import com.dreamsync.entity.Project;
 import com.dreamsync.entity.ProjectMember;
 import com.dreamsync.entity.Task;
 import com.dreamsync.entity.User;
+import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.repository.ProjectMemberRepository;
 import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.TaskRepository;
@@ -54,7 +55,7 @@ class TaskServiceTest {
         Task task = new Task();
         task.setProject(project);
         when(projectRepository.findById(5L)).thenReturn(Optional.of(project));
-        when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(false);
+        when(projectMemberRepository.findByProjectAndUser(project, currentUser)).thenReturn(Optional.empty());
 
         assertThrows(AccessDeniedException.class, () -> taskService.createTask(task));
         verify(taskRepository, never()).save(any());
@@ -67,7 +68,7 @@ class TaskServiceTest {
         task.setTitle("New task");
         task.setProject(project);
         when(projectRepository.findById(5L)).thenReturn(Optional.of(project));
-        when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(true);
+        when(projectMemberRepository.findByProjectAndUser(project, currentUser)).thenReturn(Optional.of(membership(project, currentUser, ProjectRole.DEVELOPER)));
         ProjectMember member = new ProjectMember();
         member.setProject(project);
         member.setUser(currentUser);
@@ -108,7 +109,8 @@ class TaskServiceTest {
         update.setProject(otherProject);
 
         when(taskRepository.findById(7L)).thenReturn(Optional.of(existing));
-        when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(true);
+        when(projectMemberRepository.findByProjectAndUser(project, currentUser)).thenReturn(Optional.of(membership(project, currentUser, ProjectRole.PROJECT_MANAGER)));
+        existing.setCreatedBy(currentUser);
         when(taskRepository.save(existing)).thenReturn(existing);
 
         Task result = taskService.updateTask(7L, update);
@@ -128,6 +130,14 @@ class TaskServiceTest {
 
         assertThrows(AccessDeniedException.class, () -> taskService.deleteTask(7L));
         verify(taskRepository, never()).delete(any(Task.class));
+    }
+
+    private ProjectMember membership(Project project, User user, ProjectRole role) {
+        ProjectMember member = new ProjectMember();
+        member.setProject(project);
+        member.setUser(user);
+        member.setRole(role);
+        return member;
     }
 
     @Test
