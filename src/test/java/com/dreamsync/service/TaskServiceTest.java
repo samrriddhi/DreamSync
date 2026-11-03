@@ -68,7 +68,7 @@ class TaskServiceTest {
         task.setTitle("New task");
         task.setProject(project);
         when(projectRepository.findById(5L)).thenReturn(Optional.of(project));
-        when(projectMemberRepository.findByProjectAndUser(project, currentUser)).thenReturn(Optional.of(membership(project, currentUser, ProjectRole.DEVELOPER)));
+        when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(true);
         ProjectMember member = new ProjectMember();
         member.setProject(project);
         member.setUser(currentUser);
