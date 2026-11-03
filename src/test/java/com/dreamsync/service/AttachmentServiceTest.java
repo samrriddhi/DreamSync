@@ -2,6 +2,7 @@ package com.dreamsync.service;
 
 import com.dreamsync.entity.*;
 import com.dreamsync.repository.*;
+import com.dreamsync.enums.ProjectRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -32,9 +33,17 @@ class AttachmentServiceTest {
         when(users.getCurrentUser()).thenReturn(current);
     }
 
+    private ProjectMember membership(ProjectRole role) {
+        ProjectMember member = new ProjectMember();
+        member.setProject(project);
+        member.setUser(current);
+        member.setRole(role);
+        return member;
+    }
+
     @Test void nonMemberCannotUploadFile() {
         when(tasks.findById(7L)).thenReturn(Optional.of(task));
-        when(members.existsByProjectAndUser(project, current)).thenReturn(false);
+        when(members.findByProjectAndUser(project, current)).thenReturn(Optional.empty());
         MockMultipartFile file = new MockMultipartFile("file", "notes.txt",
                 "text/plain", "hello".getBytes());
         assertThrows(AccessDeniedException.class, () -> service.uploadFile(7L, file));
@@ -65,7 +74,7 @@ class AttachmentServiceTest {
 
     @Test void emptyUploadIsRejected() {
         when(tasks.findById(7L)).thenReturn(Optional.of(task));
-        when(members.existsByProjectAndUser(project, current)).thenReturn(true);
+        when(members.findByProjectAndUser(project, current)).thenReturn(Optional.of(membership(ProjectRole.DEVELOPER)));
         MockMultipartFile file = new MockMultipartFile("file", "empty.txt",
                 "text/plain", new byte[0]);
         assertThrows(IllegalArgumentException.class, () -> service.uploadFile(7L, file));
