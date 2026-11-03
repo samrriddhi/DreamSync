@@ -89,7 +89,7 @@ class TaskServiceTest {
         existing.setId(7L);
         existing.setProject(project);
         when(taskRepository.findById(7L)).thenReturn(Optional.of(existing));
-        when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(false);
+        when(projectMemberRepository.findByProjectAndUser(project, currentUser)).thenReturn(Optional.empty());
 
         assertThrows(AccessDeniedException.class,
                 () -> taskService.updateTask(7L, new Task()));
