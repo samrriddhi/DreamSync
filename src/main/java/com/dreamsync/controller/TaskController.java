@@ -1,6 +1,7 @@
 package com.dreamsync.controller;
 
 import com.dreamsync.entity.Task;
+import com.dreamsync.dto.response.TaskResponse;
 import com.dreamsync.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,10 +25,10 @@ public class TaskController {
 
     @Operation(summary = "Create a new task")
     @PostMapping
-    public ResponseEntity<Task> createTask(
+    public ResponseEntity<TaskResponse> createTask(
             @Valid @RequestBody Task task) {
 
-        Task savedTask = taskService.createTask(task);
+        TaskResponse savedTask = taskService.createTaskResponse(task);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(savedTask);
@@ -35,18 +36,18 @@ public class TaskController {
 
     @Operation(summary = "Get all tasks")
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks() {
+    public ResponseEntity<List<TaskResponse>> getAllTasks() {
 
-        return ResponseEntity.ok(taskService.getAllTasks());
+        return ResponseEntity.ok(taskService.getAllTaskResponses());
     }
 
     @Operation(summary = "Update a task")
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(
+    public ResponseEntity<TaskResponse> updateTask(
             @PathVariable Long id,
             @Valid @RequestBody Task task) {
 
-        Task updatedTask = taskService.updateTask(id, task);
+        TaskResponse updatedTask = taskService.updateTaskResponse(id, task);
 
         return ResponseEntity.ok(updatedTask);
     }

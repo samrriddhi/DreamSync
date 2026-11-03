@@ -1,0 +1,33 @@
+import axios from 'axios'
+
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  headers: { 'Content-Type': 'application/json' },
+})
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('dreamsync_access_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+export type ApiProject = { id:number; name:string; description?:string; status?:string }
+export type ApiTask = {
+  id:number; title:string; description?:string; status:string; priority:string;
+  dueDate?:string; project?:{id:number;name?:string}; createdBy?:{name?:string;email?:string}
+}
+export type TaskPayload = { title:string; description:string; status:string; priority:string; dueDate?:string; project:{id:number} }
+
+export async function login(email:string,password:string) {
+  const {data}=await api.post('/auth/login',{email,password})
+  localStorage.setItem('dreamsync_access_token',data.accessToken)
+  localStorage.setItem('dreamsync_refresh_token',data.refreshToken)
+}
+export function logout() {
+  localStorage.removeItem('dreamsync_access_token')
+  localStorage.removeItem('dreamsync_refresh_token')
+}
+export async function getProjects() { return (await api.get<ApiProject[]>('/projects')).data }
+export async function getTasks() { return (await api.get<ApiTask[]>('/tasks')).data }
+export async function createTask(payload:TaskPayload) { return (await api.post<ApiTask>('/tasks',payload)).data }
+export async function updateTask(id:number,payload:TaskPayload) { return (await api.put<ApiTask>(`/tasks/${id}`,payload)).data }
