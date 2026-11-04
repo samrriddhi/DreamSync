@@ -5,6 +5,7 @@ import com.dreamsync.entity.Project;
 import com.dreamsync.entity.ProjectMember;
 import com.dreamsync.entity.User;
 import com.dreamsync.enums.ProjectRole;
+import com.dreamsync.enums.ProjectStatus;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.OrganizationRepository;
 import com.dreamsync.repository.OrganizationMemberRepository;
@@ -60,6 +61,9 @@ public class ProjectService {
 
         project.setId(null);
         project.setOrganization(organization);
+        if (project.getStatus() == null) {
+            project.setStatus(ProjectStatus.PLANNING);
+        }
         Project savedProject = projectRepository.save(project);
 
         ProjectMember creatorMembership = new ProjectMember();
