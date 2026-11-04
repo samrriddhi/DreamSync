@@ -32,6 +32,10 @@ export type ProjectTimeline = { projectName:string; tasks:TimelineTask[] }
 export type CriticalPath = { projectName:string; criticalPath:string[]; totalEstimatedHours:number }
 export type RiskAnalysis = { projectName:string; riskLevel:string; overdueTasks:number; blockedTasks:number; highPriorityTasks:number; completionPercentage:number }
 export type BlockedTask = { id:number; title:string; blockedBy:string }
+export type ImpactTask = { id:number; title:string; status:string; priority:string }
+export type ImpactAnalysis = { delayedTask:string; affectedTaskCount:number; affectedTasks:ImpactTask[] }
+export async function getTaskImpact(taskId:number) { return (await api.get<ImpactAnalysis>(`/analysis/impact/${taskId}`)).data }
+
 export async function getProjectTimeline(projectId:number) { return (await api.get<ProjectTimeline>(`/timeline/${projectId}`)).data }
 export async function getCriticalPath(projectId:number) { return (await api.get<CriticalPath>(`/analysis/critical-path/${projectId}`)).data }
 export async function getRiskAnalysis(projectId:number) { return (await api.get<RiskAnalysis>(`/risk-analysis/${projectId}`)).data }
