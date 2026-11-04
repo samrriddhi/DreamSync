@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Validate Docker Compose configuration
+        run: cp .env.example .env && docker compose config --quiet
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
