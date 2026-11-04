@@ -35,6 +35,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(allowedOrigins)
                 .withSockJS();
+
+        // Native WebSocket endpoint for browser clients that speak STOMP directly.
+        registry.addEndpoint("/ws-native")
+                .setAllowedOriginPatterns(allowedOrigins);
     }
 
     @Override
