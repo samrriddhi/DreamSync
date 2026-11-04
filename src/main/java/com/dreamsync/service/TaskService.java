@@ -85,7 +85,7 @@ public class TaskService {
         existingTask.setStatus(updatedTask.getStatus());
         existingTask.setPriority(updatedTask.getPriority());
         existingTask.setDueDate(updatedTask.getDueDate());
-        existingTask.setEstimatedHours(updatedTask.getEstimatedHours());
+        if (updatedTask.getEstimatedHours() != null) {\n            existingTask.setEstimatedHours(updatedTask.getEstimatedHours());\n        }
         existingTask.setAssignee(updatedTask.getAssignee() == null
                 ? null
                 : validateAssignee(existingTask.getProject(), updatedTask.getAssignee().getId()));
