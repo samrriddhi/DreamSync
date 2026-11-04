@@ -24,6 +24,8 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dreamsync
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:?Set DB_USERNAME in .env}
@@ -35,3 +37,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
