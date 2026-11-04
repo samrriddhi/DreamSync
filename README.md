@@ -20,8 +20,9 @@ A collaborative project management platform built with **Spring Boot** that enab
 - User CRUD Operations
 
 ### 📁 Project Management
-- Create Projects
-- Manage Project Members
+- Create, edit, and delete projects
+- Project status tracking (Planning / In Progress / On Hold / Completed)
+- Manage Project Members and roles
 - Activity Tracking
 
 ### ✅ Task Management
@@ -29,17 +30,21 @@ A collaborative project management platform built with **Spring Boot** that enab
 - Task Priority
 - Task Status
 - Due Dates
-- Dependency Tracking
+- Dependency Tracking with circular-dependency prevention
 - Critical Path Analysis
+- Delay impact analysis
 - Blocked Task Detection
+- Task effort estimates and project timeline
+- Project risk analysis
 
 ### 💬 Collaboration
 - Comments on Tasks
+- Project team chat with persisted message history
 - Activity Logs
-- Real-Time Notifications using WebSockets
+- Real-Time project chat and task notifications using authenticated WebSockets
 
 ### 📂 File Management
-- Upload Attachments
+- Upload, download, and delete task attachments (10 MB limit)
 - Store File Metadata in PostgreSQL
 - Local File Storage
 
@@ -71,8 +76,8 @@ On Windows PowerShell, set them before starting Spring Boot:
 
 ```powershell
 $env:DB_PASSWORD="your_postgres_password"
-$env:JWT_SECRET="replace_with_a_long_random_secret"
-.mvnw.cmd spring-boot:run
+$env:JWT_SECRET="replace_with_a_long_random_secret_at_least_32_characters"
+.\mvnw.cmd spring-boot:run
 ```
 
 ## ✅ Continuous Integration
