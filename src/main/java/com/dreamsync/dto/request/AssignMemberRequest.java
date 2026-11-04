@@ -10,5 +10,7 @@ public class AssignMemberRequest {
 
     private Long userId;
 
+    private String email;
+
     private ProjectRole role;
 }
