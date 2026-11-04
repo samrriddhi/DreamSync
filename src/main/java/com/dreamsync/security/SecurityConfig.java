@@ -62,7 +62,13 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**",
+                                HttpMethod.POST,
+                                "/auth/register",
+                                "/auth/login",
+                                "/auth/refresh",
+                                "/auth/logout"
+                        ).permitAll()
+                        .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/static/websocket.html",
