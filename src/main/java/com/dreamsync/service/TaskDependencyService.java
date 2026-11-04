@@ -7,6 +7,7 @@ import com.dreamsync.entity.ProjectMember;
 import com.dreamsync.entity.User;
 import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.repository.ProjectMemberRepository;
+import com.dreamsync.repository.ProjectRepository;
 import org.springframework.security.access.AccessDeniedException;
 import com.dreamsync.entity.TaskDependency;
 import com.dreamsync.exception.ResourceNotFoundException;
@@ -21,6 +22,7 @@ public class TaskDependencyService {
 
     private final TaskDependencyRepository taskDependencyRepository;
     private final TaskRepository taskRepository;
+    private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final CurrentUserService currentUserService;
 
@@ -28,9 +30,11 @@ public class TaskDependencyService {
                                  TaskRepository taskRepository,
                                  CycleDetectionService cycleDetectionService,
                                  ProjectMemberRepository projectMemberRepository,
-                                 CurrentUserService currentUserService) {
+                                 CurrentUserService currentUserService,
+                                 ProjectRepository projectRepository) {
         this.taskDependencyRepository = taskDependencyRepository;
         this.taskRepository = taskRepository;
+        this.projectRepository = projectRepository;
         this.cycleDetectionService = cycleDetectionService;
         this.projectMemberRepository = projectMemberRepository;
         this.currentUserService = currentUserService;
