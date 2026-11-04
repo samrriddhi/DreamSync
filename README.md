@@ -65,12 +65,32 @@ npm run dev
 
 The frontend runs on Vite's local development server and uses `http://localhost:8080` as its default backend URL. Set `VITE_API_URL` if your backend runs elsewhere.
 
+## ⚙️ Run with Docker Compose
+
+Copy `.env.example` to `.env`, replace the database password and JWT secret with strong values, and set the frontend origins for both REST and WebSocket access. Then run:
+
+```bash
+docker compose up --build
+```
+
+Docker Compose waits for PostgreSQL to become healthy before starting the backend and persists both PostgreSQL data and uploaded task attachments in named volumes. The API is available at `http://localhost:8080`.
+
+To stop the services:
+
+```bash
+docker compose down
+```
+
+Your named volumes remain intact. To remove the database and uploaded files as well, use `docker compose down -v`.
+
 ## ⚙️ Required Environment Variables
 
 The backend reads its database password and JWT signing key from environment variables:
 
 - `DB_PASSWORD` — PostgreSQL password
 - `JWT_SECRET` — a strong signing key of at least 32 characters
+- `CORS_ALLOWED_ORIGINS` — comma-separated frontend origins allowed to call the REST API
+- `WEBSOCKET_ALLOWED_ORIGINS` — comma-separated frontend origins allowed to connect over WebSocket
 
 On Windows PowerShell, set them before starting Spring Boot:
 
@@ -223,12 +243,11 @@ Logout
 
 # 🔮 Future Improvements
 
-- Docker
 - Redis Caching
 - AWS Deployment
 - Kafka Event Streaming
 - Email Notifications
-- Expand automated unit and integration test coverage
+- Expand automated integration and end-to-end test coverage
 
 ---
 
