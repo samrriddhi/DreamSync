@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.ProjectMemberRepository;
+import com.dreamsync.repository.CommentRepository;
+import com.dreamsync.repository.TaskDependencyRepository;
 import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.TaskRepository;
 import com.dreamsync.repository.UserRepository;
@@ -20,6 +22,9 @@ import java.util.List;
 @Service
 public class TaskService {
     private final TaskRepository taskRepository;
+    private final CommentRepository commentRepository;
+    private final TaskDependencyRepository taskDependencyRepository;
+    private final AttachmentService attachmentService;
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final CurrentUserService currentUserService;
@@ -30,8 +35,14 @@ public class TaskService {
                        ProjectMemberRepository projectMemberRepository,
                        WebSocketNotificationService webSocketNotificationService,
                        CurrentUserService currentUserService,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       CommentRepository commentRepository,
+                       TaskDependencyRepository taskDependencyRepository,
+                       AttachmentService attachmentService) {
         this.taskRepository = taskRepository;
+        this.commentRepository = commentRepository;
+        this.taskDependencyRepository = taskDependencyRepository;
+        this.attachmentService = attachmentService;
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.webSocketNotificationService = webSocketNotificationService;
@@ -96,12 +107,23 @@ public class TaskService {
         return savedTask;
     }
 
+    @Transactional
     public void deleteTask(Long id) {
         Task task = findTask(id);
         User currentUser = currentUserService.getCurrentUser();
         requireTaskMutationPermission(task, currentUser);
         String taskTitle = task.getTitle();
+
+        try {
+            attachmentService.deleteAttachmentsForTask(task);
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not remove task attachments", exception);
+        }
+        commentRepository.deleteAll(commentRepository.findByTaskOrderByCreatedAtAsc(task));
+        taskDependencyRepository.deleteAll(taskDependencyRepository.findByTaskId(id));
+        taskDependencyRepository.deleteAll(taskDependencyRepository.findByDependsOnTaskId(id));
         taskRepository.delete(task);
+
         notifyProjectMembers(task.getProject(), currentUser, "deleted task: " + taskTitle);
     }
 
