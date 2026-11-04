@@ -45,8 +45,16 @@ public class ProjectMemberService {
         Project project = findProject(projectId);
         requireProjectManager(project);
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = request.getUserId() != null
+                ? userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"))
+                : request.getEmail() != null && !request.getEmail().isBlank()
+                    ? userRepository.findByEmail(request.getEmail().trim().toLowerCase())
+                        .orElseThrow(() -> new ResourceNotFoundException("No registered user found with that email"))
+                    : null;
+        if (user == null) {
+            throw new IllegalArgumentException("A user ID or registered email is required");
+        }
 
         if (request.getRole() == null || request.getRole() == ProjectRole.PROJECT_MANAGER) {
             throw new IllegalArgumentException("Only an existing project manager can assign the manager role");
