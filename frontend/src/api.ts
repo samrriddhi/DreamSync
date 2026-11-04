@@ -11,7 +11,7 @@ api.interceptors.request.use(config => {
   return config
 })
 
-export type ApiProject = { id:number; name:string; description?:string; status?:string }
+export type ApiProject = { id:number; name:string; description?:string; status?:string }\nexport type ApiOrganization = { id:number; name:string; description?:string }
 export type ApiTask = {
   id:number; title:string; description?:string; status:string; priority:string;
   dueDate?:string; project?:{id:number;name?:string}; createdBy?:{id?:number;name?:string;email?:string}; assignee?:{id?:number;name?:string;email?:string}
@@ -31,6 +31,9 @@ export function logout() {
   localStorage.removeItem('dreamsync_access_token')
   localStorage.removeItem('dreamsync_refresh_token')
 }
+export async function getOrganizations() { return (await api.get<ApiOrganization[]>('/organizations')).data }
+export async function createOrganization(name:string,description:string) { return (await api.post<ApiOrganization>('/organizations',{name,description})).data }
+export async function createProject(name:string,description:string,organizationId:number) { return (await api.post<ApiProject>('/projects',{name,description,organization:{id:organizationId}})).data }
 export async function getProjects() { return (await api.get<ApiProject[]>('/projects')).data }
 export async function getTasks() { return (await api.get<ApiTask[]>('/tasks')).data }
 export async function createTask(payload:TaskPayload) { return (await api.post<ApiTask>('/tasks',payload)).data }
