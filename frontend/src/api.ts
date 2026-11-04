@@ -67,7 +67,7 @@ export async function deleteTask(id:number) { return api.delete(`/tasks/${id}`) 
 
 export async function getProjectMembers(projectId:number) { return (await api.get<ProjectMember[]>(`/projects/${projectId}/members`)).data }
 
-export type Attachment = { id:number; fileName:string; fileType?:string; uploadedAt:string }
+export type Attachment = { id:number; fileName:string; fileType?:string; uploadedAt:string; canDelete:boolean }
 export async function getTaskAttachments(taskId:number) { return (await api.get<Attachment[]>(`/tasks/${taskId}/attachments`)).data }
 export async function uploadTaskAttachment(taskId:number,file:File) {
   const form = new FormData()
