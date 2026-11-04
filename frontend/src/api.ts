@@ -46,8 +46,12 @@ export async function login(email:string,password:string) {
   localStorage.setItem('dreamsync_refresh_token',data.refreshToken)
 }
 export function logout() {
+  const refreshToken = localStorage.getItem('dreamsync_refresh_token')
   localStorage.removeItem('dreamsync_access_token')
   localStorage.removeItem('dreamsync_refresh_token')
+  if (refreshToken) {
+    void api.post('/auth/logout', { refreshToken }).catch(() => undefined)
+  }
 }
 export async function getOrganizations() { return (await api.get<ApiOrganization[]>('/organizations')).data }
 export async function createOrganization(name:string,description:string) { return (await api.post<ApiOrganization>('/organizations',{name,description})).data }
