@@ -204,7 +204,7 @@ class TaskServiceTest {
 
         verify(attachmentService).deleteAttachmentsForTask(existing);
         verify(commentRepository).deleteAll(List.of());
-        verify(taskDependencyRepository).deleteAll(List.of());
+        verify(taskDependencyRepository, times(2)).deleteAll(List.of());
         verify(taskRepository).delete(existing);
     }
 
