@@ -64,6 +64,14 @@ public class AttachmentService {
         }
     }
 
+    public void deleteAttachmentsForTask(Task task) throws IOException {
+        List<Attachment> attachments = attachmentRepository.findByTask(task);
+        for (Attachment attachment : attachments) {
+            Files.deleteIfExists(resolveStoredPath(attachment.getFilePath()));
+        }
+        attachmentRepository.deleteAll(attachments);
+    }
+
     public List<AttachmentResponse> getAttachments(Long taskId) {
         Task task = findTask(taskId);
         requireMembership(task);
