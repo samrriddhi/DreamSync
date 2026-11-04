@@ -24,6 +24,16 @@ export async function createTaskDependency(taskId:number,dependsOnTaskId:number)
 export async function deleteTaskDependency(dependencyId:number) { return api.delete(`/dependencies/${dependencyId}`) }
 export type ProjectMember = { userId:number; name:string; email:string; role:string }
 export type DashboardStats = { projectName:string; totalTasks:number; completedTasks:number; inProgressTasks:number; todoTasks:number; highPriorityTasks:number; completionPercentage:number }
+export type TimelineTask = { id:number; title:string; dueDate?:string; status:string; estimatedHours?:number }
+export type ProjectTimeline = { projectName:string; tasks:TimelineTask[] }
+export type CriticalPath = { projectName:string; criticalPath:string[]; totalEstimatedHours:number }
+export type RiskAnalysis = { projectName:string; riskLevel:string; overdueTasks:number; blockedTasks:number; highPriorityTasks:number; completionPercentage:number }
+export type BlockedTask = { id:number; title:string; blockedBy:string }
+export async function getProjectTimeline(projectId:number) { return (await api.get<ProjectTimeline>(`/timeline/${projectId}`)).data }
+export async function getCriticalPath(projectId:number) { return (await api.get<CriticalPath>(`/analysis/critical-path/${projectId}`)).data }
+export async function getRiskAnalysis(projectId:number) { return (await api.get<RiskAnalysis>(`/risk-analysis/${projectId}`)).data }
+export async function getBlockedTasks(projectId:number) { return (await api.get<BlockedTask[]>(`/blocked-tasks/${projectId}`)).data }
+
 
 export async function register(name:string,email:string,password:string) { return (await api.post('/auth/register',{name,email,password})).data }
 
