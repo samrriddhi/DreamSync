@@ -48,9 +48,7 @@ public class TaskDependencyService {
             throw new AccessDeniedException("You are not a member of this project's team");
         }
 
-        return taskDependencyRepository.findAll().stream()
-                .filter(dependency -> dependency.getTask().getProject().getId().equals(projectId)
-                        && dependency.getDependsOnTask().getProject().getId().equals(projectId))
+        return taskDependencyRepository.findByProjectId(projectId).stream()
                 .map(dependency -> new TaskDependencyResponse(
                         dependency.getId(),
                         dependency.getTask().getId(),
