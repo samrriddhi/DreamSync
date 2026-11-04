@@ -20,7 +20,7 @@ export type ApiTask = {
   id:number; title:string; description?:string; status:string; priority:string; estimatedHours?:number;
   dueDate?:string; project?:{id:number;name?:string}; createdBy?:{id?:number;name?:string;email?:string}; assignee?:{id?:number;name?:string;email?:string}
 }
-export type TaskPayload = { title:string; description:string; status:string; priority:string; estimatedHours?:number; dueDate?:string; project:{id:number}; assignee?:{id:number}|null }
+export type TaskPayload = { title:string; description:string; status:string; priority:string; estimatedHours?:number; dueDate?:string|null; project:{id:number}; assignee?:{id:number}|null }
 export type TaskDependency = { id:number; taskId:number; taskTitle:string; dependsOnTaskId:number; dependsOnTaskTitle:string }
 export async function getProjectDependencies(projectId:number) { return (await api.get<TaskDependency[]>(`/dependencies/project/${projectId}`)).data }
 export async function createTaskDependency(taskId:number,dependsOnTaskId:number) { return (await api.post<TaskDependency>('/dependencies',{task:{id:taskId},dependsOnTask:{id:dependsOnTaskId}})).data }
