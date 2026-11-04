@@ -11,6 +11,9 @@ import com.dreamsync.repository.OrganizationRepository;
 import com.dreamsync.repository.OrganizationMemberRepository;
 import com.dreamsync.repository.ProjectMemberRepository;
 import com.dreamsync.repository.ProjectRepository;
+import com.dreamsync.repository.TaskRepository;
+import com.dreamsync.repository.CommentRepository;
+import com.dreamsync.repository.TaskDependencyRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,18 +27,30 @@ public class ProjectService {
     private final OrganizationRepository organizationRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final OrganizationMemberRepository organizationMemberRepository;
+    private final TaskRepository taskRepository;
+    private final CommentRepository commentRepository;
+    private final TaskDependencyRepository taskDependencyRepository;
+    private final AttachmentService attachmentService;
     private final CurrentUserService currentUserService;
 
     public ProjectService(ProjectRepository projectRepository,
                           OrganizationRepository organizationRepository,
                           ProjectMemberRepository projectMemberRepository,
                           OrganizationMemberRepository organizationMemberRepository,
-                          CurrentUserService currentUserService) {
+                          CurrentUserService currentUserService,
+                          TaskRepository taskRepository,
+                          CommentRepository commentRepository,
+                          TaskDependencyRepository taskDependencyRepository,
+                          AttachmentService attachmentService) {
         this.projectRepository = projectRepository;
         this.organizationRepository = organizationRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.organizationMemberRepository = organizationMemberRepository;
         this.currentUserService = currentUserService;
+        this.taskRepository = taskRepository;
+        this.commentRepository = commentRepository;
+        this.taskDependencyRepository = taskDependencyRepository;
+        this.attachmentService = attachmentService;
     }
 
     public Project getProjectById(Long id) {
@@ -93,9 +108,24 @@ public class ProjectService {
         return projectRepository.save(existingProject);
     }
 
+    @Transactional
     public void deleteProject(Long id) {
         Project project = findProject(id);
         requireProjectManager(project, currentUserService.getCurrentUser());
+
+        List<com.dreamsync.entity.Task> tasks = taskRepository.findByProjectId(id);
+        for (com.dreamsync.entity.Task task : tasks) {
+            try {
+                attachmentService.deleteAttachmentsForTask(task);
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Could not remove project attachments", exception);
+            }
+            commentRepository.deleteAll(commentRepository.findByTaskOrderByCreatedAtAsc(task));
+            taskDependencyRepository.deleteAll(taskDependencyRepository.findByTaskId(task.getId()));
+            taskDependencyRepository.deleteAll(taskDependencyRepository.findByDependsOnTaskId(task.getId()));
+        }
+        taskRepository.deleteAll(tasks);
+        projectMemberRepository.deleteAll(projectMemberRepository.findByProject(project));
         projectRepository.delete(project);
     }
 
