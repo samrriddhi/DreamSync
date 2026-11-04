@@ -88,6 +88,11 @@ public class TaskDependencyService {
         if (!task.getProject().getId().equals(dependsOnTask.getProject().getId())) {
             throw new IllegalArgumentException("Dependencies must belong to the same project");
         }
+        boolean alreadyExists = taskDependencyRepository.findByTaskId(taskId).stream()
+                .anyMatch(existing -> existing.getDependsOnTask().getId().equals(dependsOnId));
+        if (alreadyExists) {
+            throw new IllegalStateException("This task dependency already exists");
+        }
 
         User user = currentUserService.getCurrentUser();
         ProjectMember membership = projectMemberRepository
