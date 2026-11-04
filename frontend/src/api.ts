@@ -20,7 +20,9 @@ export type TaskPayload = { title:string; description:string; status:string; pri
 export type ProjectMember = { userId:number; name:string; email:string; role:string }
 export type DashboardStats = { projectName:string; totalTasks:number; completedTasks:number; inProgressTasks:number; todoTasks:number; highPriorityTasks:number; completionPercentage:number }
 
-export async function register(name:string,email:string,password:string) { return (await api.post('/auth/register',{name,email,password})).data }\n\nexport async function login(email:string,password:string) {
+export async function register(name:string,email:string,password:string) { return (await api.post('/auth/register',{name,email,password})).data }
+
+export async function login(email:string,password:string) {
   const {data}=await api.post('/auth/login',{email,password})
   localStorage.setItem('dreamsync_access_token',data.accessToken)
   localStorage.setItem('dreamsync_refresh_token',data.refreshToken)
