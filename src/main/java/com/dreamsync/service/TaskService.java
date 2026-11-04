@@ -12,6 +12,7 @@ import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.ProjectMemberRepository;
 import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.TaskRepository;
+import com.dreamsync.repository.UserRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -22,17 +23,20 @@ public class TaskService {
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final CurrentUserService currentUserService;
+    private final UserRepository userRepository;
     private final WebSocketNotificationService webSocketNotificationService;
 
     public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository,
                        ProjectMemberRepository projectMemberRepository,
                        WebSocketNotificationService webSocketNotificationService,
-                       CurrentUserService currentUserService) {
+                       CurrentUserService currentUserService,
+                       UserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.webSocketNotificationService = webSocketNotificationService;
         this.currentUserService = currentUserService;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -59,6 +63,7 @@ public class TaskService {
         task.setId(null);
         task.setProject(project);
         task.setCreatedBy(currentUser);
+        if (task.getAssignee() != null) task.setAssignee(validateAssignee(project, task.getAssignee().getId()));
         Task savedTask = taskRepository.save(task);
         notifyProjectMembers(project, currentUser, "created task: " + savedTask.getTitle());
         return savedTask;
@@ -81,6 +86,9 @@ public class TaskService {
         existingTask.setPriority(updatedTask.getPriority());
         existingTask.setDueDate(updatedTask.getDueDate());
         existingTask.setEstimatedHours(updatedTask.getEstimatedHours());
+        if (updatedTask.getAssignee() != null) {
+            existingTask.setAssignee(validateAssignee(existingTask.getProject(), updatedTask.getAssignee().getId()));
+        }
         Task savedTask = taskRepository.save(existingTask);
         notifyProjectMembers(existingTask.getProject(), currentUser, "updated task: " + savedTask.getTitle());
         return savedTask;
@@ -115,6 +123,14 @@ public class TaskService {
 
     private Task findTask(Long id) {
         return taskRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+    }
+
+    private User validateAssignee(Project project, Long userId) {
+        if (userId == null) throw new IllegalArgumentException("Assignee user ID is required");
+        User assignee = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Assignee not found"));
+        requireMembership(project, assignee);
+        return assignee;
     }
 
     private void requireMembership(Project project, User user) {
