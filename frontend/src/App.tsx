@@ -13,6 +13,7 @@ function App() {
  const [projects,setProjects] = useState<ApiProject[]>([])
  const [organizations,setOrganizations] = useState<ApiOrganization[]>([])
  const [activeProjectId,setActiveProjectId] = useState<number | null>(null)
+ const [active,setActive] = useState('Projects')
  const [authenticated,setAuthenticated] = useState(Boolean(localStorage.getItem('dreamsync_access_token')))
  const [loadingData,setLoadingData] = useState(Boolean(localStorage.getItem('dreamsync_access_token')))
  const [dataError,setDataError] = useState('')
@@ -26,7 +27,7 @@ function App() {
  useEffect(()=>{if(!authenticated)return;let cancelled=false;setLoadingData(true);Promise.all([getProjects(),getTasks(),getOrganizations()]).then(([p,t,o])=>{if(cancelled)return;setProjects(p);setOrganizations(o);setActiveProjectId(p[0]?.id??null);setTasks(t.map(mapApiTask))}).catch(()=>{if(!cancelled)setDataError('Could not load your workspace. Check that the backend is running and your account has access.')}).finally(()=>{if(!cancelled)setLoadingData(false)});return()=>{cancelled=true}},[authenticated])
  useEffect(()=>{if(!authenticated||!activeProjectId)return;let cancelled=false;setDashboardLoading(true);getProjectDashboard(activeProjectId).then(stats=>{if(!cancelled)setDashboardStats(stats)}).catch(()=>{if(!cancelled)setDashboardStats(null)}).finally(()=>{if(!cancelled)setDashboardLoading(false)});return()=>{cancelled=true}},[authenticated,activeProjectId,tasks])
  useEffect(()=>{if(!authenticated||!activeProjectId||(active!=='Calendar'&&active!=='Insights'))return;let cancelled=false;setInsightsLoading(true);Promise.all([getProjectTimeline(activeProjectId),getCriticalPath(activeProjectId),getRiskAnalysis(activeProjectId),getBlockedTasks(activeProjectId)]).then(([tl,cp,risk,blocked])=>{if(cancelled)return;setTimeline(tl);setCriticalPath(cp);setRiskAnalysis(risk);setBlockedTasks(blocked)}).catch(()=>{if(!cancelled){setTimeline(null);setCriticalPath(null);setRiskAnalysis(null);setBlockedTasks([])}}).finally(()=>{if(!cancelled)setInsightsLoading(false)});return()=>{cancelled=true}},[authenticated,activeProjectId,active])
- const [active,setActive] = useState('Projects')
+
  const [query,setQuery] = useState('')
  const [showModal,setShowModal] = useState(false)
  const [showProjectModal,setShowProjectModal] = useState(false)
