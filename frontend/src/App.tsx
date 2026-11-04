@@ -117,7 +117,7 @@ function App() {
  return <div className="app-shell">
   <aside className="sidebar">
    <div className="brand"><div className="brand-mark"><Command size={19}/></div><div><b>dreamsync</b><small>WORKSPACE</small></div><button className="icon-btn collapse"><AlignLeft size={17}/></button></div>
-   <button className="workspace-switch"><span className="workspace-logo">N</span><span><b>{activeProject?.name||'Your workspace'}</b><small>DreamSync workspace</small></span><ChevronDown size={15}/></button>
+   <button className="workspace-switch"><span className="workspace-logo">{activeProject?.name?.[0]?.toUpperCase()||'W'}</span><span><b>{activeProject?.name||'Your workspace'}</b><small>DreamSync workspace</small></span><ChevronDown size={15}/></button>
    <div className="nav-scroll">{nav.map(group=><div className="nav-group" key={group.label}><p className="nav-label">{group.label}</p>{group.items.map(([label,Icon])=>{const I=Icon as typeof LayoutDashboard;return <button key={label as string} className={'nav-item '+(active===label?'selected':'')} onClick={()=>setActive(label as string)}><I size={18}/><span>{label as string}</span></button>})}</div>)}
     <div className="nav-group"><p className="nav-label">Your projects <button className="tiny-icon" onClick={openCreateProject} title="Create project"><Plus size={14}/></button></p>{projects.map(p=><button key={p.id} className={'project-link '+(activeProjectId===p.id?'active-project':'')} onClick={()=>setActiveProjectId(p.id)}><span className="project-dot purple"/>{p.name}</button>)}</div>
    </div>
