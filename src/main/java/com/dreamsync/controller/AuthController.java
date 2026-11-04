@@ -7,6 +7,7 @@ import com.dreamsync.dto.request.LogoutRequest;
 import com.dreamsync.dto.response.JwtResponse;
 import com.dreamsync.dto.response.UserResponse;
 import com.dreamsync.service.UserService;
+import com.dreamsync.service.CurrentUserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,22 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+    private final CurrentUserService currentUserService;
 
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, CurrentUserService currentUserService) {
         this.userService = userService;
+        this.currentUserService = currentUserService;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        var user = currentUserService.getCurrentUser();
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole().name());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
