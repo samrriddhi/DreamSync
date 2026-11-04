@@ -111,6 +111,46 @@ public class ProjectMemberService {
         return response;
     }
 
+    public void removeMember(Long projectId, Long userId) {
+        Project project = findProject(projectId);
+        User currentUser = requireProjectManager(project);
+        User target = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (currentUser.getId().equals(target.getId())) {
+            throw new IllegalArgumentException("A project manager cannot remove themselves");
+        }
+        ProjectMember member = projectMemberRepository.findByProjectAndUser(project, target)
+                .orElseThrow(() -> new ResourceNotFoundException("Project member not found"));
+        if (member.getRole() == ProjectRole.PROJECT_MANAGER) {
+            throw new IllegalArgumentException("Project manager role cannot be removed here");
+        }
+        projectMemberRepository.delete(member);
+        activityLogService.logActivity("MEMBER_REMOVED",
+                "Removed " + target.getName() + " from project: " + project.getName());
+    }
+
+    public void updateMemberRole(Long projectId, Long userId, ProjectRole role) {
+        Project project = findProject(projectId);
+        User currentUser = requireProjectManager(project);
+        User target = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (role == null || role == ProjectRole.PROJECT_MANAGER) {
+            throw new IllegalArgumentException("The project manager role cannot be assigned here");
+        }
+        if (currentUser.getId().equals(target.getId())) {
+            throw new IllegalArgumentException("You cannot change your own project role");
+        }
+        ProjectMember member = projectMemberRepository.findByProjectAndUser(project, target)
+                .orElseThrow(() -> new ResourceNotFoundException("Project member not found"));
+        if (member.getRole() == ProjectRole.PROJECT_MANAGER) {
+            throw new IllegalArgumentException("Project manager role cannot be changed here");
+        }
+        member.setRole(role);
+        projectMemberRepository.save(member);
+        activityLogService.logActivity("MEMBER_ROLE_UPDATED",
+                "Updated " + target.getName() + "'s role in project: " + project.getName());
+    }
+
     private Project findProject(Long projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
@@ -123,7 +163,7 @@ public class ProjectMemberService {
         }
     }
 
-    private void requireProjectManager(Project project) {
+    private User requireProjectManager(Project project) {
         User currentUser = currentUserService.getCurrentUser();
         ProjectMember membership = projectMemberRepository.findByProjectAndUser(project, currentUser)
                 .orElseThrow(() -> new AccessDeniedException("You are not a member of this project"));
@@ -131,5 +171,6 @@ public class ProjectMemberService {
         if (membership.getRole() != ProjectRole.PROJECT_MANAGER) {
             throw new AccessDeniedException("Only project managers can manage project members");
         }
+        return currentUser;
     }
 }
