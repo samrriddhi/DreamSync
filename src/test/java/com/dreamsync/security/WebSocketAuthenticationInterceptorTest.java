@@ -1,6 +1,7 @@
 package com.dreamsync.security;
 
 import com.dreamsync.entity.User;
+import com.dreamsync.entity.Project;
 import com.dreamsync.enums.Role;
 import com.dreamsync.repository.UserRepository;
 import com.dreamsync.repository.ProjectRepository;
@@ -84,6 +85,42 @@ class WebSocketAuthenticationInterceptorTest {
     void authenticatedUserCannotSubscribeToSharedNotificationTopic() {
         Message<?> message = stompMessage(
                 StompCommand.SUBSCRIBE, null, "/topic/notifications", true);
+        assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void projectMemberCanSubscribeToProjectChat() {
+        User user = new User();
+        user.setEmail("developer@example.com");
+        Project project = new Project();
+        project.setId(42L);
+        when(userRepository.findByEmail("developer@example.com")).thenReturn(Optional.of(user));
+        when(projectRepository.findById(42L)).thenReturn(Optional.of(project));
+        when(projectMemberRepository.existsByProjectAndUser(project, user)).thenReturn(true);
+
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+        accessor.setDestination("/topic/projects/42/chat");
+        accessor.setUser(new UsernamePasswordAuthenticationToken("developer@example.com", null, List.of()));
+        Message<?> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+
+        assertNotNull(interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void nonMemberCannotSubscribeToProjectChat() {
+        User user = new User();
+        user.setEmail("outsider@example.com");
+        Project project = new Project();
+        project.setId(42L);
+        when(userRepository.findByEmail("outsider@example.com")).thenReturn(Optional.of(user));
+        when(projectRepository.findById(42L)).thenReturn(Optional.of(project));
+        when(projectMemberRepository.existsByProjectAndUser(project, user)).thenReturn(false);
+
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+        accessor.setDestination("/topic/projects/42/chat");
+        accessor.setUser(new UsernamePasswordAuthenticationToken("outsider@example.com", null, List.of()));
+        Message<?> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+
         assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, channel));
     }
 
