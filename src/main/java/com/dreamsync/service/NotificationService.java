@@ -45,7 +45,7 @@ public class NotificationService {
         User user = currentUserService.getCurrentUser();
 
         List<Notification> notifications =
-                notificationRepository.findByUserOrderByCreatedAtDesc(user);
+                notificationRepository.findTop100ByUserOrderByCreatedAtDesc(user);
 
         List<NotificationResponse> response = new ArrayList<>();
 
