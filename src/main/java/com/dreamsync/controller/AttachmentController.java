@@ -53,7 +53,7 @@ public class AttachmentController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment()
-                                .filename(resource.getFilename())
+                                .filename(attachmentService.getAttachmentFileName(attachmentId))
                                 .build()
                                 .toString())
                 .body(resource);
