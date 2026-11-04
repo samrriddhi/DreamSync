@@ -19,6 +19,20 @@ public class TaskDependencyController {
         this.taskDependencyService = taskDependencyService;
     }
 
+    @Operation(summary = "List dependencies for a project")
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<java.util.List<com.dreamsync.dto.response.TaskDependencyResponse>> getProjectDependencies(
+            @PathVariable Long projectId) {
+        return ResponseEntity.ok(taskDependencyService.getProjectDependencies(projectId));
+    }
+
+    @Operation(summary = "Delete a task dependency")
+    @DeleteMapping("/{dependencyId}")
+    public ResponseEntity<Void> deleteDependency(@PathVariable Long dependencyId) {
+        taskDependencyService.deleteDependency(dependencyId);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Create a task dependency")
     @PostMapping
     public ResponseEntity<TaskDependency> createDependency(
