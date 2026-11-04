@@ -53,3 +53,6 @@ export async function inviteProjectMember(projectId:number,email:string,role:'DE
 
 export type CurrentUser = { id:number; name:string; email:string; role:string }
 export async function getCurrentUser() { return (await api.get<CurrentUser>('/auth/me')).data }
+
+export async function updateProjectMemberRole(projectId:number,userId:number,role:'DEVELOPER'|'TESTER') { return api.put(`/projects/${projectId}/members/${userId}`,{role}) }
+export async function removeProjectMember(projectId:number,userId:number) { return api.delete(`/projects/${projectId}/members/${userId}`) }
