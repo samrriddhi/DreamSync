@@ -16,7 +16,8 @@ export type ApiTask = {
   id:number; title:string; description?:string; status:string; priority:string;
   dueDate?:string; project?:{id:number;name?:string}; createdBy?:{name?:string;email?:string}
 }
-export type TaskPayload = { title:string; description:string; status:string; priority:string; dueDate?:string; project:{id:number} }
+export type TaskPayload = { title:string; description:string; status:string; priority:string; dueDate?:string; project:{id:number}; assignee?:{id:number} }
+export type ProjectMember = { userId:number; name:string; email:string; role:string }
 export type DashboardStats = { projectName:string; totalTasks:number; completedTasks:number; inProgressTasks:number; todoTasks:number; highPriorityTasks:number; completionPercentage:number }
 
 export async function login(email:string,password:string) {
@@ -36,3 +37,5 @@ export async function updateTask(id:number,payload:TaskPayload) { return (await 
 export async function getProjectDashboard(projectId:number) { return (await api.get<DashboardStats>(`/dashboard/project/${projectId}`)).data }
 
 export async function deleteTask(id:number) { return api.delete(`/tasks/${id}`) }
+
+export async function getProjectMembers(projectId:number) { return (await api.get<ProjectMember[]>(`/projects/${projectId}/members`)).data }
