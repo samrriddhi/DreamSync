@@ -15,6 +15,7 @@ function App() {
  const [activeProjectId,setActiveProjectId] = useState<number | null>(null)
  const [active,setActive] = useState('Projects')
  const [authenticated,setAuthenticated] = useState(Boolean(localStorage.getItem('dreamsync_access_token')))
+ useEffect(()=>{const handleSessionExpired=()=>{setAuthenticated(false);setTasks([]);setProjects([]);setDataError('Your session expired. Please sign in again.')};window.addEventListener('dreamsync:session-expired',handleSessionExpired);return()=>window.removeEventListener('dreamsync:session-expired',handleSessionExpired)},[])
  const [loadingData,setLoadingData] = useState(Boolean(localStorage.getItem('dreamsync_access_token')))
  const [dataError,setDataError] = useState('')
  const [dashboardStats,setDashboardStats] = useState<DashboardStats | null>(null)
