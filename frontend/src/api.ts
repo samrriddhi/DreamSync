@@ -34,3 +34,5 @@ export async function createTask(payload:TaskPayload) { return (await api.post<A
 export async function updateTask(id:number,payload:TaskPayload) { return (await api.put<ApiTask>(`/tasks/${id}`,payload)).data }
 
 export async function getProjectDashboard(projectId:number) { return (await api.get<DashboardStats>(`/dashboard/project/${projectId}`)).data }
+
+export async function deleteTask(id:number) { return api.delete(`/tasks/${id}`) }
