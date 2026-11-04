@@ -66,7 +66,7 @@ class CriticalPathServiceTest {
 
         when(taskRepository.findByProjectId(10L))
                 .thenReturn(List.of(design, implementation, documentation));
-        when(taskDependencyRepository.findAll()).thenReturn(List.of(dependency));
+        when(taskDependencyRepository.findByProjectId(10L)).thenReturn(List.of(dependency));
 
         CriticalPathResponse response = criticalPathService.findCriticalPath(10L);
 
@@ -80,7 +80,7 @@ class CriticalPathServiceTest {
         Task unestimated = task(1L, "Unestimated task", null);
 
         when(taskRepository.findByProjectId(10L)).thenReturn(List.of(unestimated));
-        when(taskDependencyRepository.findAll()).thenReturn(List.of());
+        when(taskDependencyRepository.findByProjectId(10L)).thenReturn(List.of());
 
         CriticalPathResponse response = criticalPathService.findCriticalPath(10L);
 
