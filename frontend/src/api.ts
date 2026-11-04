@@ -83,3 +83,60 @@ export async function getCurrentUser() { return (await api.get<CurrentUser>('/au
 
 export async function updateProjectMemberRole(projectId:number,userId:number,role:'DEVELOPER'|'TESTER') { return api.put(`/projects/${projectId}/members/${userId}`,{role}) }
 export async function removeProjectMember(projectId:number,userId:number) { return api.delete(`/projects/${projectId}/members/${userId}`) }
+
+export type RealtimeNotification = { sender:string; message:string }
+
+export function connectRealtimeNotifications(onNotification:(notification:RealtimeNotification)=>void) {
+  let socket:WebSocket|null = null
+  let reconnectTimer:number|undefined
+  let closed = false
+
+  const connect = () => {
+    const token = localStorage.getItem('dreamsync_access_token')
+    if (closed || !token) return
+
+    const baseUrl = api.defaults.baseURL || window.location.origin
+    const websocketUrl = baseUrl.replace(/^http/, 'ws').replace(/\/$/, '') + '/ws-native'
+    socket = new WebSocket(websocketUrl)
+
+    socket.onopen = () => {
+      socket?.send(`CONNECT\naccept-version:1.2\nhost:localhost\nAuthorization:Bearer ${token}\n\n\0`)
+    }
+
+    socket.onmessage = event => {
+      const frames = String(event.data).split('\0').filter(frame => frame.trim().length > 0)
+      for (const frame of frames) {
+        const separator = frame.indexOf('\n\n')
+        if (separator < 0) continue
+        const headers = frame.slice(0, separator)
+        const body = frame.slice(separator + 2)
+
+        if (headers.startsWith('CONNECTED')) {
+          socket?.send('SUBSCRIBE\nid:dreamsync-notifications\ndestination:/user/queue/notifications\nack:auto\n\n\0')
+        } else if (headers.startsWith('MESSAGE')) {
+          try {
+            const notification = JSON.parse(body) as RealtimeNotification
+            if (notification.message) onNotification(notification)
+          } catch {
+            // Ignore malformed or unrelated broker messages.
+          }
+        } else if (headers.startsWith('ERROR')) {
+          closed = true
+          socket?.close()
+        }
+      }
+    }
+
+    socket.onclose = () => {
+      if (!closed) reconnectTimer = window.setTimeout(connect, 3000)
+    }
+    socket.onerror = () => socket?.close()
+  }
+
+  connect()
+  return () => {
+    closed = true
+    if (reconnectTimer !== undefined) window.clearTimeout(reconnectTimer)
+    socket?.close()
+  }
+}
