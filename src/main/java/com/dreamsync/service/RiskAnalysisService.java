@@ -66,10 +66,12 @@ public class RiskAnalysisService {
         }
 
         double completionPercentage = totalTasks == 0 ? 0 : completedTasks * 100.0 / totalTasks;
-        String riskLevel = (overdueTasks >= 3 || blockedTasks >= 3 || completionPercentage < 40)
-                ? "HIGH"
-                : (overdueTasks >= 1 || blockedTasks >= 1 || completionPercentage < 70)
-                ? "MEDIUM" : "LOW";
+        String riskLevel = totalTasks == 0
+                ? "LOW"
+                : (overdueTasks >= 3 || blockedTasks >= 3 || completionPercentage < 40)
+                    ? "HIGH"
+                    : (overdueTasks >= 1 || blockedTasks >= 1 || completionPercentage < 70)
+                        ? "MEDIUM" : "LOW";
 
         RiskAnalysisResponse response = new RiskAnalysisResponse();
         response.setProjectName(project.getName());
