@@ -73,6 +73,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/static/websocket.html",
                                 "/ws/**",
+                                "/ws-native",
                                 "/ws-native/**"
                         ).permitAll()
                         .anyRequest().authenticated()
