@@ -48,7 +48,40 @@ A collaborative project management platform built with **Spring Boot** that enab
 - Activity Feed
 - Current User Activities
 
-### 📖 API Documentation
+### 💻 Frontend
+
+The React + TypeScript frontend is located in `frontend/`.
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+The frontend runs on Vite's local development server and uses `http://localhost:8080` as its default backend URL. Set `VITE_API_URL` if your backend runs elsewhere.
+
+## ⚙️ Required Environment Variables
+
+The backend reads its database password and JWT signing key from environment variables:
+
+- `DB_PASSWORD` — PostgreSQL password
+- `JWT_SECRET` — a strong signing key of at least 32 characters
+
+On Windows PowerShell, set them before starting Spring Boot:
+
+```powershell
+$env:DB_PASSWORD="your_postgres_password"
+$env:JWT_SECRET="replace_with_a_long_random_secret"
+.mvnw.cmd spring-boot:run
+```
+
+## ✅ Continuous Integration
+
+GitHub Actions runs the frontend production build and backend Maven test suite on pushes and pull requests to `master`.
+
+---
+
+## 📖 API Documentation
 - Swagger UI Integration
 
 ---
@@ -190,7 +223,7 @@ Logout
 - AWS Deployment
 - Kafka Event Streaming
 - Email Notifications
-- Unit & Integration Testing
+- Expand automated unit and integration test coverage
 
 ---
 
