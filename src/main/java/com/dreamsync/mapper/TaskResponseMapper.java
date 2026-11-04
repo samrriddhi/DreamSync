@@ -26,7 +26,11 @@ public class TaskResponseMapper {
         }
         if (task.getCreatedBy() != null) {
             response.setCreatedBy(new TaskResponse.UserInfo(
-                    task.getCreatedBy().getName(), task.getCreatedBy().getEmail()));
+                    task.getCreatedBy().getId(), task.getCreatedBy().getName(), task.getCreatedBy().getEmail()));
+        }
+        if (task.getAssignee() != null) {
+            response.setAssignee(new TaskResponse.UserInfo(
+                    task.getAssignee().getId(), task.getAssignee().getName(), task.getAssignee().getEmail()));
         }
         return response;
     }
