@@ -14,6 +14,7 @@ import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.TaskRepository;
 import com.dreamsync.repository.CommentRepository;
 import com.dreamsync.repository.TaskDependencyRepository;
+import com.dreamsync.repository.ChatMessageRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class ProjectService {
     private final CommentRepository commentRepository;
     private final TaskDependencyRepository taskDependencyRepository;
     private final AttachmentService attachmentService;
+    private final ChatMessageRepository chatMessageRepository;
     private final CurrentUserService currentUserService;
 
     public ProjectService(ProjectRepository projectRepository,
@@ -41,7 +43,8 @@ public class ProjectService {
                           TaskRepository taskRepository,
                           CommentRepository commentRepository,
                           TaskDependencyRepository taskDependencyRepository,
-                          AttachmentService attachmentService) {
+                          AttachmentService attachmentService,
+                          ChatMessageRepository chatMessageRepository) {
         this.projectRepository = projectRepository;
         this.organizationRepository = organizationRepository;
         this.projectMemberRepository = projectMemberRepository;
@@ -51,6 +54,7 @@ public class ProjectService {
         this.commentRepository = commentRepository;
         this.taskDependencyRepository = taskDependencyRepository;
         this.attachmentService = attachmentService;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     public Project getProjectById(Long id) {
@@ -125,6 +129,7 @@ public class ProjectService {
             taskDependencyRepository.deleteAll(taskDependencyRepository.findByDependsOnTaskId(task.getId()));
         }
         taskRepository.deleteAll(tasks);
+        chatMessageRepository.deleteByProject(project);
         projectMemberRepository.deleteAll(projectMemberRepository.findByProject(project));
         projectRepository.delete(project);
     }
