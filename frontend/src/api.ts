@@ -39,3 +39,14 @@ export async function getProjectDashboard(projectId:number) { return (await api.
 export async function deleteTask(id:number) { return api.delete(`/tasks/${id}`) }
 
 export async function getProjectMembers(projectId:number) { return (await api.get<ProjectMember[]>(`/projects/${projectId}/members`)).data }
+
+export type Comment = { id:number; message:string; userName:string; createdAt:string }
+export type ActivityItem = { userName:string; action:string; description:string; createdAt:string }
+export type NotificationItem = { id:number; message:string; read:boolean; createdAt:string }
+export async function getTaskComments(taskId:number) { return (await api.get<Comment[]>(`/tasks/${taskId}/comments`)).data }
+export async function addTaskComment(taskId:number,message:string) { return (await api.post<Comment>(`/tasks/${taskId}/comments`,{message})).data }
+export async function deleteTaskComment(commentId:number) { return api.delete(`/tasks/comments/${commentId}`) }
+export async function getMyActivity() { return (await api.get<ActivityItem[]>('/activity/me')).data }
+export async function getNotifications() { return (await api.get<NotificationItem[]>('/notifications')).data }
+export async function markNotificationRead(id:number) { return api.put(`/notifications/${id}/read`) }
+export async function inviteProjectMember(projectId:number,email:string,role:'DEVELOPER'|'TESTER') { return api.post(`/projects/${projectId}/members`,{email,role}) }
