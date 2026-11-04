@@ -6,6 +6,8 @@ import com.dreamsync.entity.Task;
 import com.dreamsync.entity.User;
 import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.repository.ProjectMemberRepository;
+import com.dreamsync.repository.CommentRepository;
+import com.dreamsync.repository.TaskDependencyRepository;
 import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.TaskRepository;
 import com.dreamsync.repository.UserRepository;
@@ -23,6 +25,9 @@ import static org.mockito.Mockito.*;
 class TaskServiceTest {
 
     private TaskRepository taskRepository;
+    private CommentRepository commentRepository;
+    private TaskDependencyRepository taskDependencyRepository;
+    private AttachmentService attachmentService;
     private ProjectRepository projectRepository;
     private ProjectMemberRepository projectMemberRepository;
     private CurrentUserService currentUserService;
@@ -35,13 +40,17 @@ class TaskServiceTest {
     @BeforeEach
     void setUp() {
         taskRepository = mock(TaskRepository.class);
+        commentRepository = mock(CommentRepository.class);
+        taskDependencyRepository = mock(TaskDependencyRepository.class);
+        attachmentService = mock(AttachmentService.class);
         projectRepository = mock(ProjectRepository.class);
         projectMemberRepository = mock(ProjectMemberRepository.class);
         currentUserService = mock(CurrentUserService.class);
         userRepository = mock(UserRepository.class);
         notificationService = mock(WebSocketNotificationService.class);
         taskService = new TaskService(taskRepository, projectRepository,
-                projectMemberRepository, notificationService, currentUserService, userRepository);
+                projectMemberRepository, notificationService, currentUserService, userRepository,
+                commentRepository, taskDependencyRepository, attachmentService);
 
         currentUser = new User();
         currentUser.setId(10L);
@@ -174,6 +183,29 @@ class TaskServiceTest {
 
         assertThrows(AccessDeniedException.class, () -> taskService.deleteTask(7L));
         verify(taskRepository, never()).delete(any(Task.class));
+    }
+
+    @Test
+    void deletingTaskAlsoRemovesItsCommentsDependenciesAndAttachments() throws Exception {
+        Task existing = new Task();
+        existing.setId(7L);
+        existing.setTitle("Task with related data");
+        existing.setProject(project);
+        existing.setCreatedBy(currentUser);
+
+        when(taskRepository.findById(7L)).thenReturn(Optional.of(existing));
+        when(projectMemberRepository.findByProjectAndUser(project, currentUser))
+                .thenReturn(Optional.of(membership(project, currentUser, ProjectRole.DEVELOPER)));
+        when(commentRepository.findByTaskOrderByCreatedAtAsc(existing)).thenReturn(List.of());
+        when(taskDependencyRepository.findByTaskId(7L)).thenReturn(List.of());
+        when(taskDependencyRepository.findByDependsOnTaskId(7L)).thenReturn(List.of());
+
+        taskService.deleteTask(7L);
+
+        verify(attachmentService).deleteAttachmentsForTask(existing);
+        verify(commentRepository).deleteAll(List.of());
+        verify(taskDependencyRepository).deleteAll(List.of());
+        verify(taskRepository).delete(existing);
     }
 
     private ProjectMember membership(Project project, User user, ProjectRole role) {
