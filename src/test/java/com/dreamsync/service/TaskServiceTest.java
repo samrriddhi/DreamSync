@@ -28,6 +28,7 @@ class TaskServiceTest {
     private CommentRepository commentRepository;
     private TaskDependencyRepository taskDependencyRepository;
     private AttachmentService attachmentService;
+    private ActivityLogService activityLogService;
     private ProjectRepository projectRepository;
     private ProjectMemberRepository projectMemberRepository;
     private CurrentUserService currentUserService;
@@ -43,6 +44,7 @@ class TaskServiceTest {
         commentRepository = mock(CommentRepository.class);
         taskDependencyRepository = mock(TaskDependencyRepository.class);
         attachmentService = mock(AttachmentService.class);
+        activityLogService = mock(ActivityLogService.class);
         projectRepository = mock(ProjectRepository.class);
         projectMemberRepository = mock(ProjectMemberRepository.class);
         currentUserService = mock(CurrentUserService.class);
@@ -50,7 +52,7 @@ class TaskServiceTest {
         notificationService = mock(WebSocketNotificationService.class);
         taskService = new TaskService(taskRepository, projectRepository,
                 projectMemberRepository, notificationService, currentUserService, userRepository,
-                commentRepository, taskDependencyRepository, attachmentService);
+                commentRepository, taskDependencyRepository, attachmentService, activityLogService);
 
         currentUser = new User();
         currentUser.setId(10L);
