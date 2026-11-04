@@ -1,5 +1,6 @@
 package com.dreamsync.controller;
 
+import com.dreamsync.dto.response.TaskDependencyResponse;
 import com.dreamsync.entity.TaskDependency;
 import com.dreamsync.service.TaskDependencyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +22,7 @@ public class TaskDependencyController {
 
     @Operation(summary = "List dependencies for a project")
     @GetMapping("/project/{projectId}")
-    public ResponseEntity<java.util.List<com.dreamsync.dto.response.TaskDependencyResponse>> getProjectDependencies(
+    public ResponseEntity<java.util.List<TaskDependencyResponse>> getProjectDependencies(
             @PathVariable Long projectId) {
         return ResponseEntity.ok(taskDependencyService.getProjectDependencies(projectId));
     }
@@ -35,10 +36,17 @@ public class TaskDependencyController {
 
     @Operation(summary = "Create a task dependency")
     @PostMapping
-    public ResponseEntity<TaskDependency> createDependency(
+    public ResponseEntity<TaskDependencyResponse> createDependency(
             @RequestBody TaskDependency dependency) {
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(taskDependencyService.createDependency(dependency));
+        TaskDependency saved = taskDependencyService.createDependency(dependency);
+        TaskDependencyResponse response = new TaskDependencyResponse(
+                saved.getId(),
+                saved.getTask().getId(),
+                saved.getTask().getTitle(),
+                saved.getDependsOnTask().getId(),
+                saved.getDependsOnTask().getTitle()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
