@@ -50,3 +50,6 @@ export async function getMyActivity() { return (await api.get<ActivityItem[]>('/
 export async function getNotifications() { return (await api.get<NotificationItem[]>('/notifications')).data }
 export async function markNotificationRead(id:number) { return api.put(`/notifications/${id}/read`) }
 export async function inviteProjectMember(projectId:number,email:string,role:'DEVELOPER'|'TESTER') { return api.post(`/projects/${projectId}/members`,{email,role}) }
+
+export type CurrentUser = { id:number; name:string; email:string; role:string }
+export async function getCurrentUser() { return (await api.get<CurrentUser>('/auth/me')).data }
