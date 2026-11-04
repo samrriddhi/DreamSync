@@ -53,7 +53,7 @@ public class ActivityLogService {
         }
 
         List<ActivityLog> logs =
-                activityLogRepository.findAllByOrderByCreatedAtDesc();
+                activityLogRepository.findTop100ByOrderByCreatedAtDesc();
 
         List<ActivityLogResponse> response = new ArrayList<>();
 
@@ -76,7 +76,7 @@ public class ActivityLogService {
         User user = currentUserService.getCurrentUser();;
 
         List<ActivityLog> logs =
-                activityLogRepository.findByUserOrderByCreatedAtDesc(user);
+                activityLogRepository.findTop100ByUserOrderByCreatedAtDesc(user);
 
         List<ActivityLogResponse> response = new ArrayList<>();
 
