@@ -27,6 +27,7 @@ public class TaskService {
     private final CommentRepository commentRepository;
     private final TaskDependencyRepository taskDependencyRepository;
     private final AttachmentService attachmentService;
+    private final ActivityLogService activityLogService;
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final CurrentUserService currentUserService;
@@ -40,11 +41,13 @@ public class TaskService {
                        UserRepository userRepository,
                        CommentRepository commentRepository,
                        TaskDependencyRepository taskDependencyRepository,
-                       AttachmentService attachmentService) {
+                       AttachmentService attachmentService,
+                       ActivityLogService activityLogService) {
         this.taskRepository = taskRepository;
         this.commentRepository = commentRepository;
         this.taskDependencyRepository = taskDependencyRepository;
         this.attachmentService = attachmentService;
+        this.activityLogService = activityLogService;
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.webSocketNotificationService = webSocketNotificationService;
@@ -78,6 +81,7 @@ public class TaskService {
         task.setCreatedBy(currentUser);
         if (task.getAssignee() != null) task.setAssignee(validateAssignee(project, task.getAssignee().getId()));
         Task savedTask = taskRepository.save(task);
+        activityLogService.logActivity("TASK_CREATED", "Created task: " + savedTask.getTitle());
         notifyProjectMembers(project, currentUser, "created task: " + savedTask.getTitle());
         return savedTask;
     }
@@ -105,6 +109,7 @@ public class TaskService {
                 ? null
                 : validateAssignee(existingTask.getProject(), updatedTask.getAssignee().getId()));
         Task savedTask = taskRepository.save(existingTask);
+        activityLogService.logActivity("TASK_UPDATED", "Updated task: " + savedTask.getTitle());
         notifyProjectMembers(existingTask.getProject(), currentUser, "updated task: " + savedTask.getTitle());
         return savedTask;
     }
@@ -125,6 +130,7 @@ public class TaskService {
         taskDependencyRepository.deleteAll(taskDependencyRepository.findByTaskId(id));
         taskDependencyRepository.deleteAll(taskDependencyRepository.findByDependsOnTaskId(id));
         taskRepository.delete(task);
+        activityLogService.logActivity("TASK_DELETED", "Deleted task: " + taskTitle);
 
         Project deletedProject = task.getProject();
         String notificationMessage = "deleted task: " + taskTitle;
