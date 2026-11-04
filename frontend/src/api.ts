@@ -60,6 +60,8 @@ export function logout() {
 export async function getOrganizations() { return (await api.get<ApiOrganization[]>('/organizations')).data }
 export async function createOrganization(name:string,description:string) { return (await api.post<ApiOrganization>('/organizations',{name,description})).data }
 export async function createProject(name:string,description:string,organizationId:number) { return (await api.post<ApiProject>('/projects',{name,description,organization:{id:organizationId}})).data }
+export async function updateProject(id:number,name:string,description:string,status:string) { return (await api.put<ApiProject>(`/projects/${id}`,{name,description,status})).data }
+export async function deleteProject(id:number) { return api.delete(`/projects/${id}`) }
 export async function getProjects() { return (await api.get<ApiProject[]>('/projects')).data }
 export async function getTasks() { return (await api.get<ApiTask[]>('/tasks')).data }
 export async function createTask(payload:TaskPayload) { return (await api.post<ApiTask>('/tasks',payload)).data }
