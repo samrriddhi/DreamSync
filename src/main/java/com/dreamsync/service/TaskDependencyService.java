@@ -1,5 +1,7 @@
 package com.dreamsync.service;
 
+import com.dreamsync.dto.response.TaskDependencyResponse;
+import com.dreamsync.entity.Project;
 import com.dreamsync.entity.Task;
 import com.dreamsync.entity.ProjectMember;
 import com.dreamsync.entity.User;
@@ -32,6 +34,39 @@ public class TaskDependencyService {
         this.cycleDetectionService = cycleDetectionService;
         this.projectMemberRepository = projectMemberRepository;
         this.currentUserService = currentUserService;
+    }
+
+    public java.util.List<TaskDependencyResponse> getProjectDependencies(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        User user = currentUserService.getCurrentUser();
+        if (!projectMemberRepository.existsByProjectAndUser(project, user)) {
+            throw new AccessDeniedException("You are not a member of this project's team");
+        }
+
+        return taskDependencyRepository.findAll().stream()
+                .filter(dependency -> dependency.getTask().getProject().getId().equals(projectId)
+                        && dependency.getDependsOnTask().getProject().getId().equals(projectId))
+                .map(dependency -> new TaskDependencyResponse(
+                        dependency.getId(),
+                        dependency.getTask().getId(),
+                        dependency.getTask().getTitle(),
+                        dependency.getDependsOnTask().getId(),
+                        dependency.getDependsOnTask().getTitle()))
+                .toList();
+    }
+
+    public void deleteDependency(Long dependencyId) {
+        TaskDependency dependency = taskDependencyRepository.findById(dependencyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task dependency not found"));
+        Project project = dependency.getTask().getProject();
+        User user = currentUserService.getCurrentUser();
+        ProjectMember membership = projectMemberRepository.findByProjectAndUser(project, user)
+                .orElseThrow(() -> new AccessDeniedException("You are not a member of this project's team"));
+        if (membership.getRole() != ProjectRole.PROJECT_MANAGER) {
+            throw new AccessDeniedException("Only project managers can manage task dependencies");
+        }
+        taskDependencyRepository.delete(dependency);
     }
 
     public TaskDependency createDependency(TaskDependency dependency) {
