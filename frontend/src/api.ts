@@ -11,7 +11,8 @@ api.interceptors.request.use(config => {
   return config
 })
 
-export type ApiProject = { id:number; name:string; description?:string; status?:string }\nexport type ApiOrganization = { id:number; name:string; description?:string }
+export type ApiProject = { id:number; name:string; description?:string; status?:string }
+export type ApiOrganization = { id:number; name:string; description?:string }
 export type ApiTask = {
   id:number; title:string; description?:string; status:string; priority:string;
   dueDate?:string; project?:{id:number;name?:string}; createdBy?:{id?:number;name?:string;email?:string}; assignee?:{id?:number;name?:string;email?:string}
