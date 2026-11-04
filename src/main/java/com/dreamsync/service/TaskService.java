@@ -86,9 +86,9 @@ public class TaskService {
         existingTask.setPriority(updatedTask.getPriority());
         existingTask.setDueDate(updatedTask.getDueDate());
         existingTask.setEstimatedHours(updatedTask.getEstimatedHours());
-        if (updatedTask.getAssignee() != null) {
-            existingTask.setAssignee(validateAssignee(existingTask.getProject(), updatedTask.getAssignee().getId()));
-        }
+        existingTask.setAssignee(updatedTask.getAssignee() == null
+                ? null
+                : validateAssignee(existingTask.getProject(), updatedTask.getAssignee().getId()));
         Task savedTask = taskRepository.save(existingTask);
         notifyProjectMembers(existingTask.getProject(), currentUser, "updated task: " + savedTask.getTitle());
         return savedTask;
