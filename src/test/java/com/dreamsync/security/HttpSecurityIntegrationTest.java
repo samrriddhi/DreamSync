@@ -47,6 +47,12 @@ class HttpSecurityIntegrationTest {
     }
 
     @Test
+    void unauthenticatedCurrentUserEndpointReceivesUnauthorized() throws Exception {
+        mockMvc.perform(get("/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void authenticatedNonAdminCannotAccessAdminEndpoint() throws Exception {
         mockMvc.perform(get("/users").with(user("developer").roles("DEVELOPER")))
                 .andExpect(status().isForbidden());
