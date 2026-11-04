@@ -102,6 +102,39 @@ export async function getCurrentUser() { return (await api.get<CurrentUser>('/au
 export async function updateProjectMemberRole(projectId:number,userId:number,role:'DEVELOPER'|'TESTER') { return api.put(`/projects/${projectId}/members/${userId}`,{role}) }
 export async function removeProjectMember(projectId:number,userId:number) { return api.delete(`/projects/${projectId}/members/${userId}`) }
 
+export type ChatMessage = { id:number; message:string; senderName:string; sentAt:string }
+export async function getProjectChat(projectId:number) { return (await api.get<ChatMessage[]>(`/projects/${projectId}/chat`)).data }
+export async function sendProjectChatMessage(projectId:number,message:string) { return (await api.post<ChatMessage>(`/projects/${projectId}/chat`,{message})).data }
+
+export function connectProjectChat(projectId:number,onMessage:(message:ChatMessage)=>void) {
+  let socket:WebSocket|null = null
+  let closed = false
+  let reconnectTimer:number|undefined
+  const connect=()=>{
+    const token=localStorage.getItem('dreamsync_access_token')
+    if(closed||!token)return
+    const baseUrl=api.defaults.baseURL||window.location.origin
+    socket=new WebSocket(baseUrl.replace(/^http/,'ws').replace(/\/$/,'')+'/ws-native')
+    socket.onopen=()=>socket?.send(`CONNECT\naccept-version:1.2\nhost:localhost\nAuthorization:Bearer ${token}\n\n\0`)
+    socket.onmessage=event=>{
+      for(const frame of String(event.data).split('\0').filter(value=>value.trim())){
+        const separator=frame.indexOf('\n\n')
+        if(separator<0)continue
+        const headers=frame.slice(0,separator)
+        if(headers.startsWith('CONNECTED')){
+          socket?.send(`SUBSCRIBE\nid:project-chat-${projectId}\ndestination:/topic/projects/${projectId}/chat\nack:auto\n\n\0`)
+        }else if(headers.startsWith('MESSAGE')){
+          try{const item=JSON.parse(frame.slice(separator+2)) as ChatMessage;if(item.id)onMessage(item)}catch{/* Ignore malformed broker messages. */}
+        }else if(headers.startsWith('ERROR')){closed=true;socket?.close()}
+      }
+    }
+    socket.onclose=()=>{if(!closed)reconnectTimer=window.setTimeout(connect,3000)}
+    socket.onerror=()=>socket?.close()
+  }
+  connect()
+  return ()=>{closed=true;if(reconnectTimer!==undefined)window.clearTimeout(reconnectTimer);socket?.close()}
+}
+
 export type RealtimeNotification = { sender:string; message:string }
 
 export function connectRealtimeNotifications(onNotification:(notification:RealtimeNotification)=>void) {
