@@ -7,6 +7,8 @@ import com.dreamsync.entity.User;
 import com.dreamsync.dto.response.TaskResponse;
 import com.dreamsync.mapper.TaskResponseMapper;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.exception.ResourceNotFoundException;
 import com.dreamsync.repository.ProjectMemberRepository;
@@ -124,7 +126,18 @@ public class TaskService {
         taskDependencyRepository.deleteAll(taskDependencyRepository.findByDependsOnTaskId(id));
         taskRepository.delete(task);
 
-        notifyProjectMembers(task.getProject(), currentUser, "deleted task: " + taskTitle);
+        Project deletedProject = task.getProject();
+        String notificationMessage = "deleted task: " + taskTitle;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notifyProjectMembers(deletedProject, currentUser, notificationMessage);
+                }
+            });
+        } else {
+            notifyProjectMembers(deletedProject, currentUser, notificationMessage);
+        }
     }
 
     private void requireTaskMutationPermission(Task task, User user) {
