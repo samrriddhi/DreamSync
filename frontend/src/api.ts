@@ -67,6 +67,18 @@ export async function deleteTask(id:number) { return api.delete(`/tasks/${id}`) 
 
 export async function getProjectMembers(projectId:number) { return (await api.get<ProjectMember[]>(`/projects/${projectId}/members`)).data }
 
+export type Attachment = { id:number; fileName:string; fileType?:string; uploadedAt:string }
+export async function getTaskAttachments(taskId:number) { return (await api.get<Attachment[]>(`/tasks/${taskId}/attachments`)).data }
+export async function uploadTaskAttachment(taskId:number,file:File) {
+  const form = new FormData()
+  form.append('file',file)
+  return (await api.post<Attachment>(`/tasks/${taskId}/attachments`,form,{headers:{'Content-Type':'multipart/form-data'}})).data
+}
+export async function downloadTaskAttachment(attachmentId:number) {
+  return (await api.get<Blob>(`/attachments/${attachmentId}/download`,{responseType:'blob'})).data
+}
+export async function deleteTaskAttachment(attachmentId:number) { return api.delete(`/attachments/${attachmentId}`) }
+
 export type Comment = { id:number; message:string; userName:string; createdAt:string }
 export type ActivityItem = { userName:string; action:string; description:string; createdAt:string }
 export type NotificationItem = { id:number; message:string; read:boolean; createdAt:string }
