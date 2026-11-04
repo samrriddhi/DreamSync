@@ -17,6 +17,7 @@ public class TaskResponse {
     private LocalDateTime createdAt;
     private ProjectInfo project;
     private UserInfo createdBy;
+    private UserInfo assignee;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -38,6 +39,8 @@ public class TaskResponse {
     public void setProject(ProjectInfo project) { this.project = project; }
     public UserInfo getCreatedBy() { return createdBy; }
     public void setCreatedBy(UserInfo createdBy) { this.createdBy = createdBy; }
+    public UserInfo getAssignee() { return assignee; }
+    public void setAssignee(UserInfo assignee) { this.assignee = assignee; }
 
     public static class ProjectInfo {
         private Long id;
@@ -51,10 +54,13 @@ public class TaskResponse {
     }
 
     public static class UserInfo {
+        private Long id;
         private String name;
         private String email;
         public UserInfo() {}
-        public UserInfo(String name, String email) { this.name = name; this.email = email; }
+        public UserInfo(Long id, String name, String email) { this.id = id; this.name = name; this.email = email; }
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
         public String getEmail() { return email; }
