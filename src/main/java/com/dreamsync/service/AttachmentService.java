@@ -135,6 +135,12 @@ public class AttachmentService {
         response.setFileName(attachment.getFileName());
         response.setFileType(attachment.getFileType());
         response.setUploadedAt(attachment.getUploadedAt());
+        User currentUser = currentUserService.getCurrentUser();
+        ProjectMember membership = findMembership(attachment.getTask(), currentUser);
+        boolean isManager = membership.getRole() == ProjectRole.PROJECT_MANAGER;
+        boolean isUploader = attachment.getUploadedBy() != null
+                && attachment.getUploadedBy().getId().equals(currentUser.getId());
+        response.setCanDelete(isManager || isUploader);
         return response;
     }
 }
