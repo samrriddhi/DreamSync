@@ -33,6 +33,7 @@ public class ProjectService {
     private final TaskDependencyRepository taskDependencyRepository;
     private final AttachmentService attachmentService;
     private final ChatMessageRepository chatMessageRepository;
+    private final ActivityLogService activityLogService;
     private final CurrentUserService currentUserService;
 
     public ProjectService(ProjectRepository projectRepository,
@@ -44,7 +45,8 @@ public class ProjectService {
                           CommentRepository commentRepository,
                           TaskDependencyRepository taskDependencyRepository,
                           AttachmentService attachmentService,
-                          ChatMessageRepository chatMessageRepository) {
+                          ChatMessageRepository chatMessageRepository,
+                          ActivityLogService activityLogService) {
         this.projectRepository = projectRepository;
         this.organizationRepository = organizationRepository;
         this.projectMemberRepository = projectMemberRepository;
@@ -55,6 +57,7 @@ public class ProjectService {
         this.taskDependencyRepository = taskDependencyRepository;
         this.attachmentService = attachmentService;
         this.chatMessageRepository = chatMessageRepository;
+        this.activityLogService = activityLogService;
     }
 
     public Project getProjectById(Long id) {
@@ -90,6 +93,7 @@ public class ProjectService {
         creatorMembership.setUser(creator);
         creatorMembership.setRole(ProjectRole.PROJECT_MANAGER);
         projectMemberRepository.save(creatorMembership);
+        activityLogService.logActivity("PROJECT_CREATED", "Created project: " + savedProject.getName());
 
         return savedProject;
     }
@@ -108,8 +112,9 @@ public class ProjectService {
         existingProject.setName(updatedProject.getName());
         existingProject.setDescription(updatedProject.getDescription());
         existingProject.setStatus(updatedProject.getStatus());
-
-        return projectRepository.save(existingProject);
+        Project savedProject = projectRepository.save(existingProject);
+        activityLogService.logActivity("PROJECT_UPDATED", "Updated project: " + savedProject.getName());
+        return savedProject;
     }
 
     @Transactional
@@ -132,6 +137,7 @@ public class ProjectService {
         chatMessageRepository.deleteByProject(project);
         projectMemberRepository.deleteAll(projectMemberRepository.findByProject(project));
         projectRepository.delete(project);
+        activityLogService.logActivity("PROJECT_DELETED", "Deleted project: " + project.getName());
     }
 
     private Project findProject(Long id) {
