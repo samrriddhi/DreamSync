@@ -135,18 +135,7 @@ public class TaskService {
         taskRepository.delete(task);
         activityLogService.logActivity("TASK_DELETED", "Deleted task: " + taskTitle);
 
-        Project deletedProject = task.getProject();
-        String notificationMessage = "deleted task: " + taskTitle;
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    notifyProjectMembers(deletedProject, currentUser, notificationMessage);
-                }
-            });
-        } else {
-            notifyProjectMembers(deletedProject, currentUser, notificationMessage);
-        }
+        notifyProjectMembers(task.getProject(), currentUser, "deleted task: " + taskTitle);
     }
 
     private void requireTaskMutationPermission(Task task, User user) {
@@ -158,13 +147,21 @@ public class TaskService {
     }
 
     private void notifyProjectMembers(Project project, User sender, String message) {
-        projectMemberRepository.findByProject(project).forEach(member -> {
+        Runnable dispatch = () -> projectMemberRepository.findByProject(project).forEach(member -> {
             User recipient = member.getUser();
             if (!recipient.getId().equals(sender.getId())) {
                 notificationService.createNotification(recipient, message);
             }
             webSocketNotificationService.sendNotification(recipient.getEmail(), sender.getName(), message);
         });
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() { dispatch.run(); }
+            });
+        } else {
+            dispatch.run();
+        }
     }
 
     private Project findProject(Long projectId) {
