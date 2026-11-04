@@ -17,6 +17,7 @@ export type ApiTask = {
   dueDate?:string; project?:{id:number;name?:string}; createdBy?:{name?:string;email?:string}
 }
 export type TaskPayload = { title:string; description:string; status:string; priority:string; dueDate?:string; project:{id:number} }
+export type DashboardStats = { projectName:string; totalTasks:number; completedTasks:number; inProgressTasks:number; todoTasks:number; highPriorityTasks:number; completionPercentage:number }
 
 export async function login(email:string,password:string) {
   const {data}=await api.post('/auth/login',{email,password})
@@ -31,3 +32,5 @@ export async function getProjects() { return (await api.get<ApiProject[]>('/proj
 export async function getTasks() { return (await api.get<ApiTask[]>('/tasks')).data }
 export async function createTask(payload:TaskPayload) { return (await api.post<ApiTask>('/tasks',payload)).data }
 export async function updateTask(id:number,payload:TaskPayload) { return (await api.put<ApiTask>(`/tasks/${id}`,payload)).data }
+
+export async function getProjectDashboard(projectId:number) { return (await api.get<DashboardStats>(`/dashboard/project/${projectId}`)).data }
