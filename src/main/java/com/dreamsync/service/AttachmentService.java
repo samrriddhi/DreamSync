@@ -101,6 +101,12 @@ public class AttachmentService {
         return filePath;
     }
 
+    public String getAttachmentFileName(Long attachmentId) {
+        Attachment attachment = findAuthorizedAttachment(attachmentId);
+        return attachment.getFileName() == null || attachment.getFileName().isBlank()
+                ? "attachment" : attachment.getFileName();
+    }
+
     private Attachment findAuthorizedAttachment(Long attachmentId) {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Attachment not found"));
