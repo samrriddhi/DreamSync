@@ -65,3 +65,4 @@
 .member-role-select{border:1px solid #e8e4ef;border-radius:8px;background:#fff;padding:7px 9px;color:#625879;font-size:11px}
 .member-remove{border:0;background:transparent;color:#b35c68;font-size:11px;font-weight:600;padding:7px;cursor:pointer}
 .member-remove:hover{background:#fff2f3;border-radius:7px}
+\n.login-success{background:#edf9f1;color:#287548;border-radius:7px;padding:10px;font-size:11px}.auth-mode-toggle{display:block;width:100%;margin-top:16px;padding:8px;border:0;background:transparent;color:#6959d8;font-size:11px;font-weight:700;cursor:pointer}.auth-mode-toggle:hover{text-decoration:underline}\n
