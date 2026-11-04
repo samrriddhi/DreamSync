@@ -8,6 +8,7 @@ import com.dreamsync.enums.ProjectRole;
 import com.dreamsync.repository.ProjectMemberRepository;
 import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.TaskRepository;
+import com.dreamsync.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +26,7 @@ class TaskServiceTest {
     private ProjectRepository projectRepository;
     private ProjectMemberRepository projectMemberRepository;
     private CurrentUserService currentUserService;
+    private UserRepository userRepository;
     private WebSocketNotificationService notificationService;
     private TaskService taskService;
     private User currentUser;
@@ -36,9 +38,10 @@ class TaskServiceTest {
         projectRepository = mock(ProjectRepository.class);
         projectMemberRepository = mock(ProjectMemberRepository.class);
         currentUserService = mock(CurrentUserService.class);
+        userRepository = mock(UserRepository.class);
         notificationService = mock(WebSocketNotificationService.class);
         taskService = new TaskService(taskRepository, projectRepository,
-                projectMemberRepository, notificationService, currentUserService);
+                projectMemberRepository, notificationService, currentUserService, userRepository);
 
         currentUser = new User();
         currentUser.setId(10L);
@@ -48,6 +51,24 @@ class TaskServiceTest {
         project.setId(5L);
         project.setName("Project");
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+    }
+
+    @Test
+    void taskCannotBeAssignedToUserOutsideProject() {
+        Task task = new Task();
+        task.setTitle("Assigned task");
+        task.setProject(project);
+        User outsider = new User();
+        outsider.setId(22L);
+        task.setAssignee(outsider);
+
+        when(projectRepository.findById(5L)).thenReturn(Optional.of(project));
+        when(projectMemberRepository.existsByProjectAndUser(project, currentUser)).thenReturn(true);
+        when(userRepository.findById(22L)).thenReturn(Optional.of(outsider));
+        when(projectMemberRepository.existsByProjectAndUser(project, outsider)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> taskService.createTask(task));
+        verify(taskRepository, never()).save(any());
     }
 
     @Test
