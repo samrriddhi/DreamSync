@@ -72,7 +72,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/static/websocket.html",
-                                "/ws/**"
+                                "/ws/**",
+                                "/ws-native/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
