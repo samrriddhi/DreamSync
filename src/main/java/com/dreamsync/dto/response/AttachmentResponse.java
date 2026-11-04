@@ -8,6 +8,7 @@ public class AttachmentResponse {
     private String fileName;
     private String fileType;
     private LocalDateTime uploadedAt;
+    private boolean canDelete;
 
     public AttachmentResponse() {
     }
@@ -43,4 +44,8 @@ public class AttachmentResponse {
     public void setUploadedAt(LocalDateTime uploadedAt) {
         this.uploadedAt = uploadedAt;
     }
+
+    public boolean isCanDelete() { return canDelete; }
+
+    public void setCanDelete(boolean canDelete) { this.canDelete = canDelete; }
 }
