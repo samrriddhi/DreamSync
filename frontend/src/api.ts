@@ -7,7 +7,10 @@ export const api = axios.create({
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('dreamsync_access_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  const publicAuthRoutes = ['/auth/register', '/auth/login', '/auth/refresh', '/auth/logout']
+  if (token && !publicAuthRoutes.includes(config.url ?? '')) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
