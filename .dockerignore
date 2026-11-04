@@ -1,5 +1,11 @@
-target/*.original
-.git
-.idea
-.gitignore
-README.md
+# Build outputs and local development files
+target/
+frontend/
+uploads/
+.git/
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+*.log
