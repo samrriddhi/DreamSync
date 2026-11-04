@@ -57,7 +57,7 @@ public class CriticalPathService {
         }
 
         // Only dependencies whose two endpoints belong to this project affect its path.
-        for (TaskDependency dependency : taskDependencyRepository.findAll()) {
+        for (TaskDependency dependency : taskDependencyRepository.findByProjectId(projectId)) {
             Long from = dependency.getDependsOnTask().getId();
             Long to = dependency.getTask().getId();
             if (!taskMap.containsKey(from) || !taskMap.containsKey(to)) {
