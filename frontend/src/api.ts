@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { InternalAxiosRequestConfig } from 'axios'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
@@ -12,6 +12,53 @@ api.interceptors.request.use(config => {
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
+})
+
+type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean }
+let refreshRequest: Promise<string> | null = null
+
+api.interceptors.response.use(response => response, async error => {
+  const original = error.config as RetriableRequest | undefined
+  const route = original?.url ?? ''
+  const isPublicAuthRoute = ['/auth/register', '/auth/login', '/auth/refresh', '/auth/logout'].includes(route)
+
+  if (error.response?.status !== 401 || !original || original._retry || isPublicAuthRoute) {
+    return Promise.reject(error)
+  }
+
+  const refreshToken = localStorage.getItem('dreamsync_refresh_token')
+  if (!refreshToken) {
+    localStorage.removeItem('dreamsync_access_token')
+    window.dispatchEvent(new Event('dreamsync:session-expired'))
+    return Promise.reject(error)
+  }
+
+  original._retry = true
+  if (!refreshRequest) {
+    refreshRequest = axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken })
+      .then(response => {
+        const accessToken = response.data.accessToken as string
+        const nextRefreshToken = response.data.refreshToken as string
+        localStorage.setItem('dreamsync_access_token', accessToken)
+        localStorage.setItem('dreamsync_refresh_token', nextRefreshToken)
+        return accessToken
+      })
+      .catch(refreshError => {
+        localStorage.removeItem('dreamsync_access_token')
+        localStorage.removeItem('dreamsync_refresh_token')
+        window.dispatchEvent(new Event('dreamsync:session-expired'))
+        throw refreshError
+      })
+      .finally(() => { refreshRequest = null })
+  }
+
+  try {
+    const accessToken = await refreshRequest
+    original.headers.Authorization = `Bearer ${accessToken}`
+    return api(original)
+  } catch {
+    return Promise.reject(error)
+  }
 })
 
 export type ApiProject = { id:number; name:string; description?:string; status?:string }
