@@ -1,6 +1,9 @@
 package com.dreamsync.security;
 
 import com.dreamsync.entity.User;
+import com.dreamsync.entity.Project;
+import com.dreamsync.repository.ProjectMemberRepository;
+import com.dreamsync.repository.ProjectRepository;
 import com.dreamsync.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import org.springframework.messaging.Message;
@@ -22,10 +25,16 @@ public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
+    private final ProjectMemberRepository projectMemberRepository;
 
-    public WebSocketAuthenticationInterceptor(JwtService jwtService, UserRepository userRepository) {
+    public WebSocketAuthenticationInterceptor(JwtService jwtService, UserRepository userRepository,
+                                               ProjectRepository projectRepository,
+                                               ProjectMemberRepository projectMemberRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.projectRepository = projectRepository;
+        this.projectMemberRepository = projectMemberRepository;
     }
 
     @Override
@@ -41,9 +50,15 @@ public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
             throw new MessageDeliveryException("Client messages are not allowed");
         } else if (command == StompCommand.SUBSCRIBE) {
             requireAuthenticated(accessor);
-            if (!PRIVATE_NOTIFICATION_DESTINATION.equals(accessor.getDestination())) {
-                throw new MessageDeliveryException("Destination is not allowed");
+            String destination = accessor.getDestination();
+            if (PRIVATE_NOTIFICATION_DESTINATION.equals(destination)) {
+                return message;
             }
+            if (destination != null && destination.matches("^/topic/projects/\\d+/chat$")) {
+                authorizeProjectChatSubscription(accessor, destination);
+                return message;
+            }
+            throw new MessageDeliveryException("Destination is not allowed");
         }
         return message;
     }
@@ -51,6 +66,24 @@ public class WebSocketAuthenticationInterceptor implements ChannelInterceptor {
     private void requireAuthenticated(StompHeaderAccessor accessor) {
         if (accessor.getUser() == null) {
             throw new MessageDeliveryException("Authentication required");
+        }
+    }
+
+    private void authorizeProjectChatSubscription(StompHeaderAccessor accessor, String destination) {
+        String[] parts = destination.split("/");
+        Long projectId;
+        try {
+            projectId = Long.valueOf(parts[3]);
+        } catch (RuntimeException exception) {
+            throw new MessageDeliveryException("Invalid project chat destination");
+        }
+        String email = accessor.getUser().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new MessageDeliveryException("Invalid user"));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new MessageDeliveryException("Project not found"));
+        if (!projectMemberRepository.existsByProjectAndUser(project, user)) {
+            throw new MessageDeliveryException("You are not a member of this project's team");
         }
     }
 
