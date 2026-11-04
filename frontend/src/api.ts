@@ -16,7 +16,7 @@ export type ApiTask = {
   id:number; title:string; description?:string; status:string; priority:string;
   dueDate?:string; project?:{id:number;name?:string}; createdBy?:{id?:number;name?:string;email?:string}; assignee?:{id?:number;name?:string;email?:string}
 }
-export type TaskPayload = { title:string; description:string; status:string; priority:string; dueDate?:string; project:{id:number}; assignee?:{id:number} }
+export type TaskPayload = { title:string; description:string; status:string; priority:string; dueDate?:string; project:{id:number}; assignee?:{id:number}|null }
 export type ProjectMember = { userId:number; name:string; email:string; role:string }
 export type DashboardStats = { projectName:string; totalTasks:number; completedTasks:number; inProgressTasks:number; todoTasks:number; highPriorityTasks:number; completionPercentage:number }
 
