@@ -3,6 +3,8 @@ package com.dreamsync.security;
 import com.dreamsync.entity.User;
 import com.dreamsync.enums.Role;
 import com.dreamsync.repository.UserRepository;
+import com.dreamsync.repository.ProjectRepository;
+import com.dreamsync.repository.ProjectMemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
@@ -23,6 +25,8 @@ class WebSocketAuthenticationInterceptorTest {
 
     private JwtService jwtService;
     private UserRepository userRepository;
+    private ProjectRepository projectRepository;
+    private ProjectMemberRepository projectMemberRepository;
     private WebSocketAuthenticationInterceptor interceptor;
     private MessageChannel channel;
 
@@ -30,7 +34,9 @@ class WebSocketAuthenticationInterceptorTest {
     void setUp() {
         jwtService = mock(JwtService.class);
         userRepository = mock(UserRepository.class);
-        interceptor = new WebSocketAuthenticationInterceptor(jwtService, userRepository);
+        projectRepository = mock(ProjectRepository.class);
+        projectMemberRepository = mock(ProjectMemberRepository.class);
+        interceptor = new WebSocketAuthenticationInterceptor(jwtService, userRepository, projectRepository, projectMemberRepository);
         channel = mock(MessageChannel.class);
     }
 
