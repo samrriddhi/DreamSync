@@ -28,6 +28,7 @@ public class TaskService {
     private final TaskDependencyRepository taskDependencyRepository;
     private final AttachmentService attachmentService;
     private final ActivityLogService activityLogService;
+    private final NotificationService notificationService;
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final CurrentUserService currentUserService;
@@ -42,12 +43,14 @@ public class TaskService {
                        CommentRepository commentRepository,
                        TaskDependencyRepository taskDependencyRepository,
                        AttachmentService attachmentService,
-                       ActivityLogService activityLogService) {
+                       ActivityLogService activityLogService,
+                       NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.commentRepository = commentRepository;
         this.taskDependencyRepository = taskDependencyRepository;
         this.attachmentService = attachmentService;
         this.activityLogService = activityLogService;
+        this.notificationService = notificationService;
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.webSocketNotificationService = webSocketNotificationService;
@@ -155,8 +158,13 @@ public class TaskService {
     }
 
     private void notifyProjectMembers(Project project, User sender, String message) {
-        projectMemberRepository.findByProject(project).forEach(member ->
-                webSocketNotificationService.sendNotification(member.getUser().getEmail(), sender.getName(), message));
+        projectMemberRepository.findByProject(project).forEach(member -> {
+            User recipient = member.getUser();
+            if (!recipient.getId().equals(sender.getId())) {
+                notificationService.createNotification(recipient, message);
+            }
+            webSocketNotificationService.sendNotification(recipient.getEmail(), sender.getName(), message);
+        });
     }
 
     private Project findProject(Long projectId) {
