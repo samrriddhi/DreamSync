@@ -142,6 +142,29 @@ class TaskServiceTest {
     }
 
     @Test
+    void updatePreservesEstimatedHoursWhenClientOmitsThem() {
+        Task existing = new Task();
+        existing.setId(8L);
+        existing.setTitle("Estimate task");
+        existing.setEstimatedHours(6);
+        existing.setProject(project);
+        existing.setCreatedBy(currentUser);
+
+        Task update = new Task();
+        update.setTitle("Updated estimate task");
+
+        when(taskRepository.findById(8L)).thenReturn(Optional.of(existing));
+        when(projectMemberRepository.findByProjectAndUser(project, currentUser))
+                .thenReturn(Optional.of(membership(project, currentUser, ProjectRole.PROJECT_MANAGER)));
+        when(taskRepository.save(existing)).thenReturn(existing);
+
+        Task result = taskService.updateTask(8L, update);
+
+        assertEquals(6, result.getEstimatedHours());
+        assertEquals("Updated estimate task", result.getTitle());
+    }
+
+    @Test
     void nonMemberCannotDeleteTask() {
         Task existing = new Task();
         existing.setId(7L);
