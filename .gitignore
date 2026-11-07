@@ -47,3 +47,6 @@ tsconfig.tsbuildinfo
 
 # Vite build output
 frontend/dist/
+
+# User-uploaded files (stored locally or in persistent deployment storage)
+uploads/
